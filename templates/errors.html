@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ code }} · Annotation{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+
+  <div class="error-card">
+    <p class="error-code">{{ code }}</p>
+    <h1 class="error-msg">This note does not exist or you cannot access it</h1>
+    <a class="btn btn-primary" href="{{ url_for('books.index') }}">Back to books</a>
+  </div>
+
+  
+</section>
+
+{% endblock %}
