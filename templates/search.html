@@ -1,0 +1,86 @@
+{%extends "base.html"%}
+{% block title %}Search · Annotation{% endblock %}
+
+
+
+
+
+
+
+{%block content%}
+
+{%set query = (q or '')|trim%}
+
+
+<form class="search-box" method="get" action="{{ url_for('search.search') }}">
+  <input id="q" type="search" name="q" value="{{ q or '' }}" placeholder="Title, author, course, call number or note">
+  <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+
+
+{%if not query%}
+<div class="empty">
+
+  <p>Type a title, author, course, call number, or a word from a note.</p>
+
+  <p>
+    <a href="{{ url_for('search.search', q='Bayes') }}">Bayes</a>
+    <a href="{{ url_for('search.search', q='Probability') }}">Probability</a>
+  </p>
+
+
+</div>
+{%else%}
+
+
+
+
+
+<section>
+
+  <h2 class="section-head">Books {{ books|length }}</h2>
+
+  {% if not books%}
+
+  <p class="empty">No books whose title, author, course or call number contains “{{ query }}”.</p>
+
+  {% endif %}
+
+
+  {% for book in books %}
+  <a class="card" href="{{ url_for('books.book', book_id=book._id) }}">
+
+    <p>{{ book.course }}</p>
+
+    <h3>{{ book.title }}</h3>
+
+    <p>{{ book.authors }}</p>
+    {% if book.edition %}<p>{{ book.edition }}</p>{% endif %}
+    <p>Check your copy: {{ book.call_number }} · {{ book.location }}</p>
+  </a>
+  {% endfor %}
+
+
+</section>
+
+<section>
+
+  <h2 class="section-head">Notes {{ notes|length }}</h2>
+
+  {%if not notes%}
+  <p class="empty">No notes whose text or anchor contains “{{ query }}”.</p>
+  {%endif%}
+  {%for note in notes%}
+  {% with show_book=True, can_edit=(note.owner_id == current_owner_id()) %}{% include "_note.html" %}{% endwith %}
+  {%endfor%}
+</section>
+
+
+{%endif%}
+
+
+
+
+
+{%endblock%}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Books · Annotation{% endblock %}
+
+
+
+
+
+
+
+
+{%block content%}
+
+<h1 class="lede">Write it here, not in the book.</h1>
+
+{%if not groups%}
+<p class="empty">No books yet.</p>
+{%endif%}
+
+
+
+{%for group in groups%}
+<section>
+  <h2>{{ group.course }}</h2>
+  {% for book in group.books %}
+  <a class="card" href="{{ url_for('books.book', book_id=book._id) }}">
+    <p class="stat"><strong data-count="{{ book.note_count }}">{{ book.note_count }}</strong><span>{{ 'note' if book.note_count == 1 else 'notes' }}</span></p>
+    <h3>{{ book.title }}</h3>
+    <p>{{ book.authors }}</p>
+    {% if book.edition %}<p>{{ book.edition }}</p>{% endif %}
+    <p>Check your copy: {{ book.call_number }} · {{ book.location }}</p>
+  </a>
+  {%endfor%}
+</section>
+{%endfor%}
+
+
+
+
+
+{%endblock%}
