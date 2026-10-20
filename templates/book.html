@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} · Annotation{%endblock%}
+
+
+
+
+
+
+{%block content%}
+
+<header class="book-head">
+
+  <h1 class="book-title--lg">{{ book.title }}</h1>
+
+  <p>{{ book.authors }}{% if book.edition %} · {{ book.edition }}{% endif %}</p>
+
+  <p>
+    <span class="tag">{{ book.call_number }}</span>
+    <span class="tag">{{ book.page_count }} pages</span>
+    <span class="tag">{{ book.location }}</span>
+    <span class="tag">{{ book.course }}</span>
+  </p>
+
+  
+</header>
+
+
+
+
+<div class="banner">
+
+  <p><strong data-count="{{ total }}">{{ total }}</strong> notes so far, <mark>and the pages stay clean</mark></p>
+
+
+  <form class="page-jump" method="get" action="{{ url_for('notes.new', book_id=book._id) }}">
+    <input name="page" type="number" min="1" max="{{ book.page_count }}" placeholder="Page" required>
+    <button type="submit" class="btn btn-primary">Write here</button>
+  </form>
+
+  <p>
+    <a href="{{ url_for('notes.new', book_id=book._id) }}">Chapter / edition note</a>
+    <a href="#chapter-notes">Jump to chapter / edition ↓</a>
+  </p>
+
+</div>
+
+
+
+
+<section>
+  <h2 class="section-head">Notes by page</h2>
+
+  {%if not page_notes%}
+  <p class="empty">Nobody has written on this book yet. Turn to the page you want and type its number above.</p>
+  {% endif%}
+
+  {% for group in page_notes|groupby('page')%}
+
+  <div>
+
+    <h3 class="page-head">
+      <span>p.{{ group.grouper }}</span>
+      <a href="{{ url_for('notes.new', book_id=book._id, page=group.grouper) }}">+ Write on this page</a>
+    </h3>
+
+
+    {% for note in group.list %}
+    {% with show_book=False, can_edit=(note.owner_id == current_owner_id()) %}{% include "_note.html" %}{% endwith %}
+    {% if note.replies %}
+    <div class="replies">
+      {% for reply in note.replies %}
+      {% with note=reply, show_book=False, can_edit=(reply.owner_id == current_owner_id()) %}{% include "_note.html" %}{% endwith %}
+      {% endfor%}
+    </div>
+    {% endif%}
+    {% endfor %}
+  </div>
+
+  {%endfor%}
+
+</section>
+
+
+
+
+<section id="chapter-notes">
+
+  <h2 class="section-head">Chapter / edition</h2>
+
+  <p>Notes anchored to the preface, a chapter, an appendix or an edition difference. Describe the spot in the book, not the course.</p>
+
+  {%if not chapter_notes%}
+  <div class="empty">
+    <p>No chapter or edition notes yet.</p>
+    <a class="btn btn-ghost" href="{{ url_for('notes.new', book_id=book._id) }}">Chapter / edition note</a>
+  </div>
+  {% endif %}
+
+  {% for note in chapter_notes%}
+  {% with show_book=False, can_edit=(note.owner_id == current_owner_id()) %}{% include "_note.html" %}{% endwith %}
+  {% if note.replies %}
+
+  <div class="replies">
+    {% for reply in note.replies %}
+    {% with note=reply, show_book=False, can_edit=(reply.owner_id == current_owner_id()) %}{% include "_note.html" %}{% endwith %}
+    {% endfor %}
+  </div>
+
+  {%endif%}
+  {%endfor%}
+
+</section>
+
+
+
+{%endblock%}
