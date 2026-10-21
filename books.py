@@ -1,17 +1,17 @@
 from flask import Blueprint
 
-books_bp = Blueprint("books",__name__)
+bp = Blueprint("books",__name__)
 
 
-@books_bp.route("/")
+@bp.route("/")
 
 
-def index():
+def home():
     return "not yet",501
 
 
-@books_bp.route("/books/<book_id>")
+@bp.route("/books/<book_id>")
 
 
-def book(book_id):
+def show(book_id):
     return "not yet",501

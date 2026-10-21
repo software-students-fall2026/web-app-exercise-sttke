@@ -2,9 +2,9 @@ import datetime
 
 from flask import Blueprint, current_app, redirect, render_template, request, url_for
 
-from helpers import KINDS, anchor_errors, current_owner_id, get_or_404
+from helpers import TYPES, check_anchor, reader_id, find_or_404
 
-notes_bp = Blueprint("notes", __name__)
+bp = Blueprint("notes", __name__)
 
 
 def read_form():
@@ -41,7 +41,7 @@ def form_errors(form, book_doc):
 
     vs_edition = form["vs_edition"] or None
 
-    errors = anchor_errors(
+    errors = check_anchor(
         form["scope"],
         page,
         unit,
@@ -53,7 +53,7 @@ def form_errors(form, book_doc):
 
         errors.append("Describe the spot in the book")
 
-    if form["kind"] not in KINDS:
+    if form["kind"] not in TYPES:
 
         errors.append("Choose a valid note type")
 
@@ -79,12 +79,12 @@ def form_errors(form, book_doc):
 
 
 
-@notes_bp.route("/books/<book_id>/notes/new", methods=["GET", "POST"])
+@bp.route("/books/<book_id>/notes/new", methods=["GET", "POST"])
 
 
-def new(book_id):
+def write(book_id):
 
-    book_doc = get_or_404(current_app.db.books, book_id)
+    book_doc = find_or_404(current_app.db.books, book_id)
 
     form = {
         "scope": "page",
@@ -109,6 +109,8 @@ def new(book_id):
 
         if not errors:
 
+            now = datetime.datetime.now(datetime.timezone.utc)
+
             note = {
                 "book_id": book_doc["_id"],
                 "scope": form["scope"],
@@ -119,57 +121,52 @@ def new(book_id):
                 "kind": form["kind"],
                 "body": form["body"],
                 "owner_name": form["owner_name"],
-                "owner_id": current_owner_id(),
+                "owner_id": reader_id(),
                 "visibility": form["visibility"],
                 "reply_to": None,
-                "created_at": datetime.datetime.now(datetime.timezone.utc)
+                "created_at": now,
+                "updated_at": now
             }
 
-            current_app.db.notes.insert_one(note)
+            result = current_app.db.notes.insert_one(note)
 
-            return redirect(url_for("books.book", book_id=book_id))
+            return redirect(url_for("books.show", book_id=book_id, _anchor="n-" + str(result.inserted_id)))
     return render_template(
         "note_form.html",
         book=book_doc,
         form=form,
         errors=errors,
-        kinds=KINDS
+        kinds=TYPES
 
     )
 
 
 
-@notes_bp.route("/notes/<note_id>")
-def detail(note_id):
-    return "not yet",501
-
-
-
-@notes_bp.route("/notes/<note_id>/reply",methods=["GET", "POST"])
-def reply(note_id):
+@bp.route("/notes/<note_id>/reply",methods=["GET", "POST"])
+def answer(note_id):
     return "not yet",501
 
 
 
 
-@notes_bp.route("/notes/<note_id>/edit",methods=["GET", "POST"])
-def edit(note_id):
+@bp.route("/notes/<note_id>/edit",methods=["GET", "POST"])
+def change(note_id):
     return "not yet",501
 
 
 
-@notes_bp.route("/notes/<note_id>/delete",methods=["GET", "POST"])
-def delete(note_id):
+@bp.route("/notes/<note_id>/delete",methods=["GET", "POST"])
+def remove(note_id):
     return "not yet",501
 
 
-@notes_bp.route("/notebook")
+@bp.route("/notebook")
 
-def notebook():
+def my_notes():
     return "not yet",501
 
 
-@notes_bp.route("/notes/<note_id>/share",methods=["POST"])
+@bp.route("/notes/<note_id>/share",methods=["POST"])
 
-def share(note_id):
+def publish(note_id):
     return "not yet",501

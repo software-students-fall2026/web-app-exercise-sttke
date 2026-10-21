@@ -6,12 +6,12 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, session
 from pymongo import MongoClient
 
-from books import books_bp
+import books
 
-from helpers import SCOPE_LABELS,UNIT_LABELS,current_owner_id
+from helpers import LABELS,reader_id
 
-from notes import notes_bp
-from search import search_bp
+import notes
+import search
 
 
 def create_app():
@@ -28,32 +28,35 @@ def create_app():
 
 
 
-    app.register_blueprint(books_bp)
+    app.register_blueprint(books.bp)
 
-    app.register_blueprint(search_bp)
+    app.register_blueprint(search.bp)
 
-    app.register_blueprint(notes_bp)
+    app.register_blueprint(notes.bp)
+
+
+
+
 
     @app.before_request
+    def set_readerid():
+        if "rid" not in session:
+            session["rid"] = str(uuid.uuid4())
 
-    def give_reader_id():
-        if "reader_id" not in session:
-            session["reader_id"] = uuid.uuid4().hex
+    app.jinja_env.globals.update(reader_id=reader_id,LABELS=LABELS)
 
-    @app.context_processor
-    
-    def template_globals():
-        return {
-            "current_owner_id":current_owner_id,
-            "SCOPE_LABELS":SCOPE_LABELS,
-            "UNIT_LABELS":UNIT_LABELS,
-        }
+
+
 
     @app.errorhandler(403)
+    def err_403(err):
+        return render_template("oops.html",code=403),403
+
+
+
 
     @app.errorhandler(404)
-
-    def error_page(e):
-        return render_template("errors.html",code=e.code),e.code
+    def err_404(err):
+        return render_template("oops.html",code=404),404
 
     return app
