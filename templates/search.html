@@ -1,4 +1,5 @@
-{%extends "base.html"%}
+{%extends "layout.html"%}
+{% from "card.html" import card %}
 {% block title %}Search · Annotation{% endblock %}
 
 
@@ -9,18 +10,15 @@
 
 {%block content%}
 
-{%set query = (q or '')|trim%}
-
-
-<form class="search-box" method="get" action="{{ url_for('search.search') }}">
+<form class="sbox" method="get" action="{{ url_for('search.search') }}">
   <input id="q" type="search" name="q" value="{{ q or '' }}" placeholder="Title, author, course, call number or note">
-  <button type="submit" class="btn btn-primary">Search</button>
+  <button type="submit" class="btn dark">Search</button>
 </form>
 
 
 
-{%if not query%}
-<div class="empty">
+{%if not q%}
+<div class="none">
 
   <p>Type a title, author, course, call number, or a word from a note.</p>
 
@@ -39,25 +37,25 @@
 
 <section>
 
-  <h2 class="section-head">Books {{ books|length }}</h2>
+  <h2 class="sec">Books {{ books|length }}</h2>
 
   {% if not books%}
 
-  <p class="empty">No books whose title, author, course or call number contains “{{ query }}”.</p>
+  <p class="none">No books whose title, author, course or call number contains “{{ q }}”.</p>
 
   {% endif %}
 
 
-  {% for book in books %}
-  <a class="card" href="{{ url_for('books.book', book_id=book._id) }}">
+  {% for b in books %}
+  <a class="bk fade" href="{{ url_for('books.show', book_id=b._id) }}">
 
-    <p>{{ book.course }}</p>
+    <p>{{ b.course }}</p>
 
-    <h3>{{ book.title }}</h3>
+    <h3>{{ b.title }}</h3>
 
-    <p>{{ book.authors }}</p>
-    {% if book.edition %}<p>{{ book.edition }}</p>{% endif %}
-    <p>Check your copy: {{ book.call_number }} · {{ book.location }}</p>
+    <p>{{ b.authors }}</p>
+    {% if b.edition %}<p>{{ b.edition }}</p>{% endif %}
+    <p>Check your copy: {{ b.call_number }} · {{ b.location }}</p>
   </a>
   {% endfor %}
 
@@ -66,13 +64,13 @@
 
 <section>
 
-  <h2 class="section-head">Notes {{ notes|length }}</h2>
+  <h2 class="sec">Notes {{ notes|length }}</h2>
 
   {%if not notes%}
-  <p class="empty">No notes whose text or anchor contains “{{ query }}”.</p>
+  <p class="none">No notes whose text or anchor contains “{{ q }}”.</p>
   {%endif%}
   {%for note in notes%}
-  {% with show_book=True, can_edit=(note.owner_id == current_owner_id()) %}{% include "_note.html" %}{% endwith %}
+  {{ card(note, True, note.owner_id == reader_id()) }}
   {%endfor%}
 </section>
 

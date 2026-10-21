@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% from "card.html" import card %}
+{% block title %}My Notebook · Annotation{% endblock %}
+
+
+
+
+{%block content%}
+
+<h1 class="title">My Notebook</h1>
+
+
+
+{%if not notes%}
+<div class="none">
+
+  <p>You have not written anything yet.</p>
+  
+  <a class="btn light" href="{{ url_for('books.home') }}">Find a book</a>
+</div>
+{%endif%}
+
+
+
+{%for note in notes%}
+{{ card(note, True, note.owner_id == reader_id()) }}
+{%endfor%}
+
+
+
+
+{%endblock%}

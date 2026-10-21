@@ -1,10 +1,10 @@
 from flask import Blueprint
 
 
-search_bp = Blueprint("search",__name__)
+bp = Blueprint("search",__name__)
 
 
-@search_bp.route("/search")
+@bp.route("/search")
 
 def search():
     return "not yet",501

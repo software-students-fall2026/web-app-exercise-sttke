@@ -1,0 +1,91 @@
+{% macro card(note, with_book, mine) %}
+<article class="item fade" id="n-{{ note._id }}">
+
+
+
+{%if with_book%}
+<a href="{{ url_for('books.show', book_id=note.book_id) }}#n-{{ note._id }}">{{ note.book_name }}</a>
+{%endif%}
+
+
+
+
+
+
+
+{%if not note.reply_to%}
+    <div class="item-top">
+
+        <span class="label">{{ note.kind|capitalize }}</span>
+
+        {% if note.visibility == 'private' %}<span class="label">Only you</span>{%endif%}
+
+    </div>
+{%endif%}
+
+
+
+
+
+
+{%if note.anchor_desc%}
+<p class="where">
+  
+  {% if note.reply_to%}
+    Reply
+  {% endif %}
+
+  {%if note.scope=='page'%}
+    p.{{ note.page }}
+
+
+  {%elif note.scope=='chapter'%}
+    Chapter {{ note.unit }}
+
+  {%elif note.scope=='appendix'%}
+    Appendix {{ note.unit }}
+
+  {%elif note.scope=='front_matter' %}
+    Front matter · {{ LABELS[note.unit] }}
+
+  {%else%}
+    Edition · {{ LABELS[note.unit] }} · vs {{ note.vs_edition }}
+
+  {%endif%}
+
+  · {{ note.anchor_desc }}
+</p>
+
+{%endif%}
+
+
+
+
+  <p class="text">{{ note.body }}</p>
+
+  <footer class="meta">
+      <span>{{ note.owner_name }}</span>
+      <time>{{ note.created_at.strftime('%Y-%m-%d') }}</time>
+  </footer>
+
+
+
+  
+
+
+{%if (not note.reply_to and note.visibility != 'private') or mine%}
+<div class="acts">
+    {%if not note.reply_to and note.visibility != 'private'%}<a href="{{ url_for('notes.answer', note_id=note._id) }}">Reply</a>{%endif%}
+    {%if mine%}
+    <a href="{{ url_for('notes.change', note_id=note._id) }}">Edit</a>
+    <a class="red" href="{{ url_for('notes.remove', note_id=note._id) }}">Delete</a>
+    {% if note.visibility == 'private' and not note.reply_to%}
+    <form method="post" action="{{ url_for('notes.publish', note_id=note._id) }}" onsubmit="return confirm('Share this note with everyone? It cannot be made private again.')"><button type="submit">Share</button></form>
+    {%endif%}
+    {%endif%}
+</div>
+{%endif%}
+
+
+</article>
+{% endmacro %}

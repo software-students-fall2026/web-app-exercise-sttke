@@ -6,53 +6,56 @@
 
 body 
 {
-  margin: 0;
+  margin:0;
   color: #1C1A17;
-  font: 15px / 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size:15px;
+  line-height:22px;
+  font-family: Arial, sans-serif;
 }
 
 
 h1, h2, h3, p 
 { 
-  margin: 0; 
+  margin:0; 
 }
 
 a 
 {
-  color: inherit;
+  color:inherit;
 }
 
 button, input, select, textarea 
 {
-  font: inherit;
-  color: inherit;
+  font:inherit;
+  color:inherit;
 }
 
 
-.topbar 
-{
+
+
+.top {
   height: 56px;
-  display: flex;
-  align-items: center;
+  display:flex;
+  align-items:center;
   padding: 0 16px;
   border-bottom: 1px solid #1C1A17;
 }
 
-.content 
+.main 
 {
   max-width: 560px;
   margin: 0 auto;
   padding: 20px 16px 100px;
 }
 
-.content > * + * 
+section 
 {
   margin-top: 16px;
 }
 
 
 
-.bottom-nav 
+.tabs 
 {
   position: fixed;
   left: 0;
@@ -66,7 +69,7 @@ button, input, select, textarea
 
 
 
-.nav-item 
+.tab 
 {
   flex: 1;
   display: flex;
@@ -76,26 +79,26 @@ button, input, select, textarea
   text-decoration: none;
 }
 
-.nav-item.is-active 
+.tab.on 
 {
   color: #1C1A17;
   font-weight: 700;
 }
 
-.lede 
+.intro 
 {
   font-size: 15px;
   font-weight: 400;
   color: #4A4540;
 }
 
-.section-head 
+.sec 
 {
   padding-bottom: 8px;
   border-bottom: 1px solid #1C1A17;
 }
 
-.card 
+.bk 
 {
   display: block;
   padding: 16px;
@@ -105,32 +108,32 @@ button, input, select, textarea
   text-decoration: none;
 }
 
-.stat 
+.num 
 {
   display: flex;
   align-items: baseline;
-  gap: 4px;
   margin-bottom: 8px;
 }
 
-.stat strong 
+.num strong 
 {
   font-size:28px;
+  margin-right: 4px;
 }
 
-.book-title--lg 
+.big 
 {
   font-size: 26px;
   line-height: 34px;
 }
 
-.book-head 
+.head 
 {
   padding-bottom: 16px;
   border-bottom: 1px solid #ccc;
 }
 
-.tag 
+.pill 
 {
   display: inline-block;
   padding: 4px 10px;
@@ -139,20 +142,20 @@ button, input, select, textarea
   color: #4A4540;
 }
 
-.banner 
+.box 
 {
   margin-top: 20px;
   padding: 20px 16px 12px;
   border: 1px solid #1C1A17;
 }
 
-.page-jump 
+.jump 
 {
   display: flex;
   margin-top: 16px;
 }
 
-.page-jump input 
+.jump input 
 {
   flex: 1;
   min-width: 0;
@@ -163,7 +166,7 @@ button, input, select, textarea
   font-size: 18px;
 }
 
-.page-head 
+.pg 
 {
   display: flex;
   align-items: center;
@@ -172,52 +175,52 @@ button, input, select, textarea
   border-bottom: 1px solid #ccc;
 }
 
-.note 
+.item 
 {
   margin-top: 12px;
   padding: 16px 16px 12px 13px;
   border: 1px solid #ddd;
-  border-left: 3px solid var(--k-deep, #ccc);
+  border-left: 3px solid #ccc;
 }
 
-.replies 
+.answers 
 {
   margin: 8px 0 0 20px;
   padding-left: 12px;
   border-left: 1px dashed #ccc;
 }
 
-.note-head 
+.item-top 
 {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   margin-bottom: 12px;
 }
 
-.badge 
+.label 
 {
   display: inline-block;
+  margin-right: 8px;
   padding: 6px 12px;
-  background: var(--k-bg, #ECE5D6);
+  background: #ECE5D6;
   font-size: 13px;
   font-weight: 600;
 }
 
-.anchor 
+.where 
 {
   margin-bottom: 8px;
   font-size: 13px;
   color: #4A4540;
 }
 
-.note-body 
+.text 
 {
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  word-wrap: break-word;
 }
 
-.note-meta 
+.meta 
 {
   display: flex;
   margin-top: 12px;
@@ -225,22 +228,22 @@ button, input, select, textarea
   color: #66625C;
 }
 
-.note-meta time 
+.meta time 
 {
   margin-left: auto;
 }
 
-.note-actions 
+.acts 
 {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
   margin-top: 12px;
 }
 
-.note-actions a, .note-actions button 
+.acts a, .acts button 
 {
   display: inline-block;
+  margin-right: 6px;
   padding: 8px 12px;
   border: 1px solid #ccc;
   font-size: 13px;
@@ -248,17 +251,17 @@ button, input, select, textarea
   cursor: pointer;
 }
 
-.note-actions .danger 
+.acts .red 
 {
   color: #9E2F2F;
 }
 
-.search-box 
+.sbox 
 {
   display: flex;
 }
 
-.search-box input 
+.sbox input 
 {
   flex: 1;
   min-width: 0;
@@ -269,7 +272,7 @@ button, input, select, textarea
   font-size: 16px;
 }
 
-.empty 
+.none 
 {
   margin-top: 24px;
   padding: 24px 16px;
@@ -278,21 +281,21 @@ button, input, select, textarea
   color: #4A4540;
 }
 
-.error-card 
+.err 
 {
   padding: 32px 20px 24px;
   border: 1px solid #ccc;
   text-align: center;
 }
 
-.error-msg 
+.err-msg 
 {
   margin-top: 12px;
   font-size: 16px;
   color: #4A4540;
 }
 
-.page-title 
+.title 
 {
   font-size: 26px;
   line-height: 34px;
@@ -300,14 +303,14 @@ button, input, select, textarea
   border-bottom: 1px solid #1C1A17;
 }
 
-.field 
+.row 
 {
   margin-top: 20px;
 }
 
 
 
-.field > label 
+.row > label 
 {
   display: block;
   margin-bottom: 6px;
@@ -315,7 +318,7 @@ button, input, select, textarea
   font-weight: 600;
 }
 
-.field input, .field select, .field textarea 
+.row input, .row select, .row textarea 
 {
   width: 100%;
   min-height: 44px;
@@ -326,13 +329,13 @@ button, input, select, textarea
 
 
 
-.field textarea 
+.row textarea 
 {
   min-height: 140px;
   padding: 10px 12px;
 }
 
-.form-errors 
+.errs 
 {
   list-style: none;
   margin: 16px 0 0;
@@ -342,11 +345,15 @@ button, input, select, textarea
   font-size: 14px;
 }
 
-.form-actions 
+.btns 
 {
   display: flex;
-  gap: 10px;
   margin-top: 32px;
+}
+
+.btns .btn 
+{
+  margin-right: 10px;
 }
 
 .btn 
@@ -360,14 +367,44 @@ button, input, select, textarea
   cursor: pointer;
 }
 
-.btn-primary 
+.dark 
 {
   background: #1C1A17;
   color: #F6F1E7;
 }
 
-.btn-ghost 
+.light 
 {
   border-color: #ccc;
   color: #1C1A17;
+}
+
+.me 
+{
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 13px;
+  color: #66625C;
+  white-space: nowrap;
+}
+
+.me a, a.me 
+{
+  display: inline-block;
+  padding: 12px 0 12px 6px;
+}
+
+.acts button 
+{
+  background: none;
+}
+
+.fade 
+{
+  animation: fadein .4s;
+}
+
+@keyframes fadein 
+{
+  from { opacity: 0; }
 }

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
 {% block title %}Books · Annotation{% endblock %}
 
 
@@ -10,26 +10,36 @@
 
 {%block content%}
 
-<h1 class="lede">Write it here, not in the book.</h1>
+<h1 class="intro">Write it here, not in the book.</h1>
 
-{%if not groups%}
-<p class="empty">No books yet.</p>
+{%if not courses%}
+<p class="none">No books yet.</p>
 {%endif%}
 
 
 
-{%for group in groups%}
+{%for g in courses%}
 <section>
-  <h2>{{ group.course }}</h2>
-  {% for book in group.books %}
-  <a class="card" href="{{ url_for('books.book', book_id=book._id) }}">
-    <p class="stat"><strong data-count="{{ book.note_count }}">{{ book.note_count }}</strong><span>{{ 'note' if book.note_count == 1 else 'notes' }}</span></p>
-    <h3>{{ book.title }}</h3>
-    <p>{{ book.authors }}</p>
-    {% if book.edition %}<p>{{ book.edition }}</p>{% endif %}
-    <p>Check your copy: {{ book.call_number }} · {{ book.location }}</p>
+
+  <h2>{{ g.course }}</h2>
+
+
+  {% for b in g.books %}
+  <a class="bk fade" href="{{ url_for('books.show', book_id=b._id) }}">
+
+    <p class="num"><strong>{{ b.count }}</strong><span>{% if b.count == 1 %}note{% else %}notes{% endif %}</span></p>
+
+    <h3>{{ b.title }}</h3>
+    <p>{{ b.authors }}</p>
+    
+    {% if b.edition %}<p>{{ b.edition }}</p>{% endif %}
+
+    <p>Check your copy: {{ b.call_number }} · {{ b.location }}</p>
   </a>
   {%endfor%}
+
+
+
 </section>
 {%endfor%}
 
