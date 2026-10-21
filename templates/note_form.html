@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}New note · Annotation{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Write on {{ book.title }}</h1>
+
+{# 校验没过的话错误都列在最上面 #}
+{% if errors %}
+<ul class="form-errors">
+  {% for error in errors %}
+  <li>{{ error }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{# 没写 js 所以所有字段都摆出来 填错了靠后端提示 #}
+<form class="form" method="post">
+
+  <div class="field">
+    <label for="scope">Where in the book</label>
+    <select id="scope" name="scope">
+      <option value="page" {% if form.scope == 'page' %}selected{% endif %}>A page</option>
+      <option value="chapter" {% if form.scope == 'chapter' %}selected{% endif %}>A whole chapter</option>
+      <option value="appendix" {% if form.scope == 'appendix' %}selected{% endif %}>An appendix</option>
+      <option value="front_matter" {% if form.scope == 'front_matter' %}selected{% endif %}>Front matter</option>
+      <option value="edition" {% if form.scope == 'edition' %}selected{% endif %}>An edition difference</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="page">Page number</label>
+    <input id="page" name="page" type="number" min="1" max="{{ book.page_count }}" value="{{ form.page }}">
+    <p class="help">Only for page notes. This book has {{ book.page_count }} pages.</p>
+  </div>
+
+  <div class="field">
+    <label for="unit">Chapter, appendix or section</label>
+    <input id="unit" name="unit" value="{{ form.unit }}">
+    <p class="help">A chapter number like 7, an appendix letter like C, or one of preface, contents, notation, inside_cover, exercise_numbering, page_numbering, figures, appendix_content.</p>
+  </div>
+
+  <div class="field">
+    <label for="vs_edition">Compared edition</label>
+    <input id="vs_edition" name="vs_edition" value="{{ form.vs_edition }}" placeholder="3rd ed.">
+    <p class="help">Only for edition notes.</p>
+  </div>
+
+  <div class="field">
+    <label for="anchor_desc">Which spot exactly</label>
+    <input id="anchor_desc" name="anchor_desc" maxlength="80" value="{{ form.anchor_desc }}" placeholder="the definition of O-notation">
+  </div>
+
+  <div class="field">
+    <label for="kind">Kind of note</label>
+    <select id="kind" name="kind">
+      {% for kind in kinds %}
+      <option value="{{ kind }}" {% if form.kind == kind %}selected{% endif %}>{{ kind|capitalize }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="body">Your note</label>
+    <textarea id="body" name="body">{{ form.body }}</textarea>
+  </div>
+
+  <div class="field">
+    <label for="owner_name">Your name</label>
+    <input id="owner_name" name="owner_name" maxlength="40" value="{{ form.owner_name }}">
+  </div>
+
+
+<div class="field">
+
+  <label for="visibility">Visibility</label>
+
+  <select id="visibility" name="visibility">
+
+    <option value="shared" {% if form.visibility == 'shared' %}selected{% endif %}>
+      Public
+    </option>
+
+    <option value="private" {% if form.visibility == 'private' %}selected{% endif %}>
+      Private
+    </option>
+
+  </select>
+
+  <p class="help">Private notes are only visible to you.</p>
+
+</div>
+
+
+
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save note</button>
+    <a class="btn btn-ghost" href="{{ url_for('books.book', book_id=book._id) }}">Cancel</a>
+  </div>
+
+</form>
+
+{% endblock %}
