@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Blueprint, current_app, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, redirect, render_template, request, url_for
 
 from helpers import TYPES, check_anchor, reader_id, find_or_404
 
@@ -73,6 +73,7 @@ def form_errors(form, book_doc):
     if form["visibility"] not in ("shared", "private"):
 
         errors.append("Choose a valid visibility option")
+
 
     return errors, page, unit, vs_edition
 
@@ -149,9 +150,69 @@ def answer(note_id):
 
 
 
-@bp.route("/notes/<note_id>/edit",methods=["GET", "POST"])
+
+@bp.route("/notes/<note_id>/edit", methods=["GET", "POST"])
+
+
 def change(note_id):
-    return "not yet",501
+
+    note = find_or_404(current_app.db.notes, note_id)
+
+    if note.get("owner_id") != reader_id():
+
+        abort(403)
+
+    form = {
+
+        "body": note.get("body", ""),
+        "visibility": note.get("visibility", "shared")
+    }
+
+    errors = []
+
+    if request.method == "POST":
+
+        form["body"] = request.form.get("body", "").strip()
+
+        form["visibility"] = request.form.get("visibility", "").strip()
+
+
+        if not form["body"]:
+
+            errors.append("Please enter a note")
+
+        if form["visibility"] not in ("shared", "private"):
+
+            errors.append("Choose a valid visibility option")
+
+        if note.get("visibility") == "shared" and form["visibility"] == "private":
+                errors.append("A public note cannot be made private again")
+        if not errors:
+
+            current_app.db.notes.update_one(
+
+                {"_id": note["_id"], "owner_id": reader_id()},
+
+                {"$set":{"body": form["body"],"visibility": form["visibility"],"updated_at": datetime.datetime.now(datetime.timezone.utc)
+
+                }}
+            )
+
+            return redirect(
+
+                url_for("books.show", book_id=note["book_id"],
+                        _anchor="n-" + str(note["_id"]))
+            )
+
+
+    return render_template(
+
+        "edit_note.html",
+        note=note,
+        form=form,
+        errors=errors
+    )
+
 
 
 
