@@ -1,0 +1,40 @@
+
+{% extends "layout.html" %}
+
+{% block title %}Delete note · Annotation{% endblock %}
+
+{% block content %}
+
+<h1 class="title">Delete note</h1>
+
+<p>Are you sure you want to delete this note?</p>
+
+<div class="item">
+
+  <p class="text">{{ note.body }}</p>
+
+  <p class="meta">{{ note.owner_name }}</p>
+
+</div>
+
+<form method="post">
+
+  <div class="btns">
+
+    <button type="submit" class="btn dark">
+
+      Delete note
+
+    </button>
+
+    <a class="btn light" href="{{ url_for('books.show', book_id=note.book_id) }}">
+
+      Cancel
+      
+    </a>
+
+  </div>
+
+</form>
+
+{% endblock %}
