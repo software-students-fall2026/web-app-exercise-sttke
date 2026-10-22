@@ -1,0 +1,68 @@
+
+{% extends "layout.html" %}
+
+{% block title %}Reply · Annotation{% endblock %}
+
+{% block content %}
+
+<h1 class="title">Reply to note</h1>
+
+
+<div class="card">
+
+  <p>{{ note.body }}</p>
+
+  <p>{{ note.owner_name }}</p>
+
+</div>
+
+
+{% if errors %}
+
+<ul class="errs">
+
+  {% for error in errors %}
+  <li>{{ error }}</li>
+  {% endfor %}
+
+</ul>
+
+{% endif %}
+
+
+<form method="post">
+
+  <div class="row">
+
+    <label for="body">Your reply</label>
+
+    <textarea id="body" name="body" required>{{ body }}</textarea>
+
+  </div>
+
+
+<div class="row">
+
+  <label for="owner_name">Your name</label>
+
+  <input id="owner_name"
+         name="owner_name"
+         maxlength="40"
+         value="{{ owner_name }}">
+
+</div>
+
+
+  <div class="btns">
+
+    <button type="submit" class="btn dark">Post reply</button>
+
+    <a class="btn light" href="{{ url_for('books.show', book_id=note.book_id) }}">
+      Cancel
+    </a>
+
+  </div>
+
+</form>
+
+{% endblock %}

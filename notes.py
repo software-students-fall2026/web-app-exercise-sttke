@@ -1,5 +1,6 @@
 import datetime
 
+
 from flask import Blueprint, abort, current_app, redirect, render_template, request, url_for
 
 from helpers import TYPES, check_anchor, reader_id, find_or_404
@@ -143,9 +144,74 @@ def write(book_id):
 
 
 
-@bp.route("/notes/<note_id>/reply",methods=["GET", "POST"])
+
+@bp.route("/notes/<note_id>/reply", methods=["GET", "POST"])
+
 def answer(note_id):
-    return "not yet",501
+
+    note = find_or_404(current_app.db.notes, note_id)
+
+    if note.get("reply_to") or note.get("visibility") != "shared":
+
+        abort(403)
+
+    errors = []
+
+    body = ""
+
+    owner_name = ""
+
+    if request.method == "POST":
+
+        body = request.form.get("body", "").strip()
+        owner_name = request.form.get("owner_name", "").strip()
+
+        if not body:
+
+            errors.append("Please enter a reply")
+
+        if not owner_name:
+            errors.append("Please enter your name")
+
+        if len(owner_name) > 40:
+            errors.append("Your name is too long")
+
+        if not errors:
+
+            now = datetime.datetime.now(datetime.timezone.utc)
+
+            reply_doc = {
+                "book_id": note["book_id"],
+                "scope": note.get("scope"),
+                "page": note.get("page"),
+                "unit": note.get("unit"),
+                "vs_edition": note.get("vs_edition"),
+                "anchor_desc": note.get("anchor_desc"),
+                "kind": note.get("kind"),
+                "reply_to": note["_id"],
+                "body": body,
+                "owner_id": reader_id(),
+                "owner_name": owner_name,
+                "visibility": "shared",
+                "created_at": now,
+                "updated_at": now
+            }
+
+            current_app.db.notes.insert_one(reply_doc)
+
+            return redirect(
+                url_for("books.show", book_id=note["book_id"],
+                        _anchor="n-" + str(note["_id"]))
+            )
+
+    return render_template(
+        "reply.html",
+        owner_name=owner_name,
+        note=note,
+        body=body,
+        errors=errors
+    )
+
 
 
 
