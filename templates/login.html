@@ -1,0 +1,72 @@
+
+{% extends "layout.html" %}
+
+{% block title %}Log in · Annotation{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Log in</h1>
+
+{% if errors %}
+
+<ul class="form-errors">
+
+  {% for error in errors %}
+
+  <li>{{ error }}</li>
+
+  {% endfor %}
+
+
+</ul>
+{% endif %}
+
+
+<form class="form" method="post">
+
+  <div class="field">
+
+    <label for="username">Username</label>
+
+    <input
+      id="username"
+      name="username"
+      type="text"
+      value="{{ form.username if form is defined else '' }}"
+      required
+    >
+
+  </div>
+
+
+  <div class="field">
+
+    <label for="password">Password</label>
+
+    <input
+      id="password"
+      name="password"
+      type="password"
+      required
+    >
+
+  </div>
+
+
+  <div class="form-actions">
+
+    <button class="btn btn-primary" type="submit">Log in</button>
+
+  </div>
+
+  <p class="help">
+
+    Don't have an account?
+
+    <a href="#">Register here</a>
+
+  </p>
+
+</form>
+
+{% endblock %}
