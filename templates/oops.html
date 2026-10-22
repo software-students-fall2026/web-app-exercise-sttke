@@ -1,7 +1,5 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ code }} · Annotation{% endblock %}
-
 
 
 
@@ -11,17 +9,10 @@
 
 {%block content%}
 
-<section>
 
-  <div class="err">
-    <p>{{ code }}</p>
-    <h1 class="err-msg">This note does not exist or you cannot access it</h1>
-
-    <a class="btn dark" href="{{ url_for('books.home') }}">Back to books</a>
-
-  </div>
+  <h1 class="title">{{ code }}</h1>
+  <p class="notice">This page does not exist or you cannot access it</p>
 
   
-</section>
 
 {%endblock%}

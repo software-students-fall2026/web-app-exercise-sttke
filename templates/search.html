@@ -1,6 +1,5 @@
 {%extends "layout.html"%}
 {% from "card.html" import card %}
-{% block title %}Search · Annotation{% endblock %}
 
 
 
@@ -11,25 +10,13 @@
 {%block content%}
 
 <form class="sbox" method="get" action="{{ url_for('search.search') }}">
-  <input id="q" type="search" name="q" value="{{ q or '' }}" placeholder="Title, author, course, call number or note">
+  <input name="q" value="{{ q }}" placeholder="Title, author, course, call number or note">
   <button type="submit" class="btn dark">Search</button>
 </form>
 
 
 
-{%if not q%}
-<div class="none">
-
-  <p>Type a title, author, course, call number, or a word from a note.</p>
-
-  <p>
-    <a href="{{ url_for('search.search', q='Bayes') }}">Bayes</a>
-    <a href="{{ url_for('search.search', q='Probability') }}">Probability</a>
-  </p>
-
-
-</div>
-{%else%}
+{%if q%}
 
 
 
@@ -39,25 +26,22 @@
 
   <h2 class="sec">Books {{ books|length }}</h2>
 
-  {% if not books%}
-
-  <p class="none">No books whose title, author, course or call number contains “{{ q }}”.</p>
-
-  {% endif %}
 
 
-  {% for b in books %}
-  <a class="bk fade" href="{{ url_for('books.show', book_id=b._id) }}">
+
+  {%for b in books%}
+  <a class="bk" href="{{ url_for('books.show', book_id=b._id) }}">
 
     <p>{{ b.course }}</p>
 
     <h3>{{ b.title }}</h3>
 
     <p>{{ b.authors }}</p>
-    {% if b.edition %}<p>{{ b.edition }}</p>{% endif %}
-    <p>Check your copy: {{ b.call_number }} · {{ b.location }}</p>
+    
+    <p>Check your copy: {{ b.call_number }} - {{ b.location }}</p>
+
   </a>
-  {% endfor %}
+  {%endfor%}
 
 
 </section>
@@ -66,11 +50,9 @@
 
   <h2 class="sec">Notes {{ notes|length }}</h2>
 
-  {%if not notes%}
-  <p class="none">No notes whose text or anchor contains “{{ q }}”.</p>
-  {%endif%}
+
   {%for note in notes%}
-  {{ card(note, True, note.owner_id == reader_id()) }}
+  {{ card(note) }}
   {%endfor%}
 </section>
 

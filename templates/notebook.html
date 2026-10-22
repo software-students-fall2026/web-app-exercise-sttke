@@ -1,6 +1,5 @@
 {% extends "layout.html" %}
 {% from "card.html" import card %}
-{% block title %}My Notebook · Annotation{% endblock %}
 
 
 
@@ -11,20 +10,33 @@
 
 
 
-{%if not notes%}
-<div class="none">
 
-  <p>You have not written anything yet.</p>
-  
-  <a class="btn light" href="{{ url_for('books.home') }}">Find a book</a>
-</div>
-{%endif%}
+
+<section>
+  <h2 class="sec">Private drafts</h2>
 
 
 
-{%for note in notes%}
-{{ card(note, True, note.owner_id == reader_id()) }}
-{%endfor%}
+  {%for note in notes%}
+  {%if note.visibility == 'private'%}
+  {{ card(note) }}
+  {%endif%}
+  {%endfor%}
+</section>
+
+
+
+
+<section>
+  <h2 class="sec">Shared</h2>
+
+  {%for note in notes%}
+  {%if note.visibility=='shared'%}
+  {{ card(note) }}
+  {%endif%}
+  {%endfor%}
+
+</section>
 
 
 
