@@ -216,9 +216,35 @@ def change(note_id):
 
 
 
-@bp.route("/notes/<note_id>/delete",methods=["GET", "POST"])
+
+@bp.route("/notes/<note_id>/delete", methods=["GET", "POST"])
+
 def remove(note_id):
-    return "not yet",501
+
+    note = find_or_404(current_app.db.notes, note_id)
+
+    if note.get("owner_id") != reader_id():
+
+        abort(403)
+
+    if request.method == "POST":
+
+        current_app.db.notes.delete_one(
+        {
+            "_id": note["_id"],
+            "owner_id": reader_id()
+        })
+
+        return redirect(
+
+            url_for("books.show", book_id=note["book_id"])
+
+        )
+
+    return render_template(
+        "delete_note.html",
+        note=note
+    )
 
 
 @bp.route("/notebook")
