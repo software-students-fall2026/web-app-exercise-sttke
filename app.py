@@ -3,60 +3,53 @@ import os
 import uuid
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, session
-from pymongo import MongoClient
+from flask import Flask
+from flask import render_template
+from flask import session
 
 import books
-
-from helpers import LABELS,reader_id
 
 import notes
 import search
 
 
-def create_app():
+load_dotenv()
 
-    load_dotenv()
+app=Flask(__name__)
 
-    app=Flask(__name__)
-
-    app.config["SECRET_KEY"]=os.environ["SECRET_KEY"]
-
-    app.db = MongoClient(os.environ["MONGO_URI"])[os.environ["MONGO_DBNAME"]]
+app.secret_key=os.environ["SECRET_KEY"]
 
 
 
 
 
-    app.register_blueprint(books.bp)
+app.register_blueprint(books.bp)
 
-    app.register_blueprint(search.bp)
+app.register_blueprint(search.bp)
 
-    app.register_blueprint(notes.bp)
-
-
-
-
-
-    @app.before_request
-    def set_readerid():
-        if "rid" not in session:
-            session["rid"] = str(uuid.uuid4())
-
-    app.jinja_env.globals.update(reader_id=reader_id,LABELS=LABELS)
+app.register_blueprint(notes.bp)
 
 
 
 
-    @app.errorhandler(403)
-    def err_403(err):
-        return render_template("oops.html",code=403),403
+
+@app.before_request
+def set_readerid():
+    if "rid" not in session:
+        session["rid"]=str(uuid.uuid4())
+
+        session.permanent=True
 
 
 
 
-    @app.errorhandler(404)
-    def err_404(err):
-        return render_template("oops.html",code=404),404
+@app.errorhandler(403)
+def err_403(err):
+    return render_template("oops.html",code=403),403
 
-    return app
+
+
+
+@app.errorhandler(404)
+def err_404(err):
+    return render_template("oops.html",code=404),404

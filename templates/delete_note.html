@@ -1,7 +1,7 @@
 
 {% extends "layout.html" %}
 
-{% block title %}Delete note · Annotation{% endblock %}
+{% block title %}Delete note - Annotation{% endblock %}
 
 {% block content %}
 
@@ -17,7 +17,7 @@
 
 </div>
 
-<form method="post">
+<form method="post" action="{{ url_for('notes.remove', note_id=note._id) }}">
 
   <div class="btns">
 

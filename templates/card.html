@@ -1,9 +1,11 @@
-{% macro card(note, with_book, mine) %}
-<article class="item fade" id="n-{{ note._id }}">
+{%macro card(note)%}
+{%set mine=note.owner_id==session.rid%}
+
+<article class="item" id="n-{{ note._id }}">
 
 
 
-{%if with_book%}
+{%if note.book_name%}
 <a href="{{ url_for('books.show', book_id=note.book_id) }}#n-{{ note._id }}">{{ note.book_name }}</a>
 {%endif%}
 
@@ -21,19 +23,15 @@
         {% if note.visibility == 'private' %}<span class="label">Only you</span>{%endif%}
 
     </div>
-{%endif%}
 
 
 
 
 
 
-{%if note.anchor_desc%}
 <p class="where">
   
-  {% if note.reply_to%}
-    Reply
-  {% endif %}
+
 
   {%if note.scope=='page'%}
     p.{{ note.page }}
@@ -46,14 +44,14 @@
     Appendix {{ note.unit }}
 
   {%elif note.scope=='front_matter' %}
-    Front matter · {{ LABELS[note.unit] }}
+    Front matter - {{ note.unit.replace('_', ' ')|capitalize }}
 
-  {%else%}
-    Edition · {{ LABELS[note.unit] }} · vs {{ note.vs_edition }}
+  {%elif note.scope=='edition'%}
+    Edition - {{ note.unit.replace('_', ' ')|capitalize }} - vs {{ note.vs_edition }}
 
   {%endif%}
 
-  · {{ note.anchor_desc }}
+  - {{ note.anchor_desc }}
 </p>
 
 {%endif%}
@@ -64,8 +62,8 @@
   <p class="text">{{ note.body }}</p>
 
   <footer class="meta">
-      <span>{{ note.owner_name }}</span>
-      <time>{{ note.created_at.strftime('%Y-%m-%d') }}</time>
+      <span>{%if mine%}You{%else%}{{ note.owner_name }}{%endif%}</span>
+      <span>{{ note.created_at.date() }}{%if note.updated_at > note.created_at%} (edited){%endif%}</span>
   </footer>
 
 
@@ -73,19 +71,17 @@
   
 
 
-{%if (not note.reply_to and note.visibility != 'private') or mine%}
 <div class="acts">
-    {%if not note.reply_to and note.visibility != 'private'%}<a href="{{ url_for('notes.answer', note_id=note._id) }}">Reply</a>{%endif%}
+    {%if not note.reply_to and note.visibility == 'shared'%}<a href="{{ url_for('notes.answer', note_id=note._id) }}">Reply</a>{%endif%}
     {%if mine%}
     <a href="{{ url_for('notes.change', note_id=note._id) }}">Edit</a>
     <a class="red" href="{{ url_for('notes.remove', note_id=note._id) }}">Delete</a>
-    {% if note.visibility == 'private' and not note.reply_to%}
+    {% if note.visibility == 'private' %}
     <form method="post" action="{{ url_for('notes.publish', note_id=note._id) }}" onsubmit="return confirm('Share this note with everyone? It cannot be made private again.')"><button type="submit">Share</button></form>
     {%endif%}
     {%endif%}
 </div>
-{%endif%}
 
 
 </article>
-{% endmacro %}
+{%endmacro%}

@@ -1,20 +1,12 @@
 {% extends "layout.html" %}
 
-{% block title %}New note · Annotation{% endblock %}
+{% block title %}New note - Annotation{% endblock %}
 
 {% block content %}
 
 <h1 class="title">Write on {{ book.title }}</h1>
 
-{% if errors %}
-<ul class="errs">
-  {% for error in errors %}
-  <li>{{ error }}</li>
-  {% endfor %}
-</ul>
-{% endif %}
-
-<form method="post">
+<form method="post" action="{{ url_for('notes.write', book_id=book._id) }}">
 
   <div class="row">
     <label for="scope">Where in the book</label>
@@ -53,9 +45,11 @@
   <div class="row">
     <label for="kind">Kind of note</label>
     <select id="kind" name="kind">
-      {% for kind in kinds %}
-      <option value="{{ kind }}" {% if form.kind == kind %}selected{% endif %}>{{ kind|capitalize }}</option>
-      {% endfor %}
+      <option value="question" {% if form.kind == 'question' %}selected{% endif %}>Question</option>
+      <option value="correction" {% if form.kind == 'correction' %}selected{% endif %}>Correction</option>
+      <option value="translation" {% if form.kind == 'translation' %}selected{% endif %}>Translation</option>
+      <option value="argument" {% if form.kind == 'argument' %}selected{% endif %}>Argument</option>
+      <option value="summary" {% if form.kind == 'summary' %}selected{% endif %}>Summary</option>
     </select>
   </div>
 
@@ -76,13 +70,9 @@
 
   <select id="visibility" name="visibility">
 
-    <option value="shared" {% if form.visibility == 'shared' %}selected{% endif %}>
-      Public
-    </option>
+    <option value="shared" {% if form.visibility == 'shared' %}selected{% endif %}>Public</option>
 
-    <option value="private" {% if form.visibility == 'private' %}selected{% endif %}>
-      Private
-    </option>
+    <option value="private" {% if form.visibility == 'private' %}selected{% endif %}>Private</option>
 
   </select>
 
@@ -94,8 +84,9 @@
 
 
   <div class="btns">
+
     <button type="submit" class="btn dark">Save note</button>
-    <a class="btn light" href="{{ url_for('books.show', book_id=book._id) }}">Cancel</a>
+
   </div>
 
 </form>
