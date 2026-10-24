@@ -1,94 +1,25 @@
-{% extends "layout.html" %}
-
-{% block title %}New note - Annotation{% endblock %}
-
+{% extends "base.html" %}
+{% block title %}New note · Annotation{% endblock %}
 {% block content %}
-
-<h1 class="title">Write on {{ book.title }}</h1>
-
-<form method="post" action="{{ url_for('notes.write', book_id=book._id) }}">
-
-  <div class="row">
-    <label for="scope">Where in the book</label>
+<h1 class="page-title">Write on {{ book.title }}</h1>
+{% if errors %}<ul class="form-errors">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+<form method="post">
+  <div class="field">
+    <label for="scope">Where in the book?</label>
     <select id="scope" name="scope">
-      <option value="page" {% if form.scope == 'page' %}selected{% endif %}>A page</option>
-      <option value="chapter" {% if form.scope == 'chapter' %}selected{% endif %}>A whole chapter</option>
-      <option value="appendix" {% if form.scope == 'appendix' %}selected{% endif %}>An appendix</option>
-      <option value="front_matter" {% if form.scope == 'front_matter' %}selected{% endif %}>Front matter</option>
-      <option value="edition" {% if form.scope == 'edition' %}selected{% endif %}>An edition difference</option>
+      {% for value, label in [('page', 'Page'), ('chapter', 'Chapter'), ('appendix', 'Appendix'), ('front_matter', 'Front matter'), ('edition', 'Edition difference')] %}
+        <option value="{{ value }}" {% if form.scope == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
     </select>
   </div>
-
-  <div class="row">
-    <label for="page">Page number</label>
-    <input id="page" name="page" type="number" min="1" max="{{ book.page_count }}" value="{{ form.page }}">
-    <p>Only for page notes. This book has {{ book.page_count }} pages.</p>
-  </div>
-
-  <div class="row">
-    <label for="unit">Chapter, appendix or section</label>
-    <input id="unit" name="unit" value="{{ form.unit }}">
-    <p>A chapter number like 7, an appendix letter like C, or one of preface, contents, notation, inside_cover, exercise_numbering, page_numbering, figures, appendix_content.</p>
-  </div>
-
-  <div class="row">
-    <label for="vs_edition">Compared edition</label>
-    <input id="vs_edition" name="vs_edition" value="{{ form.vs_edition }}" placeholder="3rd ed.">
-    <p>Only for edition notes.</p>
-  </div>
-
-  <div class="row">
-    <label for="anchor_desc">Which spot exactly</label>
-    <input id="anchor_desc" name="anchor_desc" maxlength="80" value="{{ form.anchor_desc }}" placeholder="the definition of O-notation">
-  </div>
-
-  <div class="row">
-    <label for="kind">Kind of note</label>
-    <select id="kind" name="kind">
-      <option value="question" {% if form.kind == 'question' %}selected{% endif %}>Question</option>
-      <option value="correction" {% if form.kind == 'correction' %}selected{% endif %}>Correction</option>
-      <option value="translation" {% if form.kind == 'translation' %}selected{% endif %}>Translation</option>
-      <option value="argument" {% if form.kind == 'argument' %}selected{% endif %}>Argument</option>
-      <option value="summary" {% if form.kind == 'summary' %}selected{% endif %}>Summary</option>
-    </select>
-  </div>
-
-  <div class="row">
-    <label for="body">Your note</label>
-    <textarea id="body" name="body">{{ form.body }}</textarea>
-  </div>
-
-  <div class="row">
-    <label>Your name</label>
-    <p>{{ current_user.username }}</p>
-  </div>
-
-
-<div class="row">
-
-  <label for="visibility">Visibility</label>
-
-  <select id="visibility" name="visibility">
-
-    <option value="shared" {% if form.visibility == 'shared' %}selected{% endif %}>Public</option>
-
-    <option value="private" {% if form.visibility == 'private' %}selected{% endif %}>Private</option>
-
-  </select>
-
-  <p>Private notes are only visible to you.</p>
-
-</div>
-
-
-
-
-  <div class="btns">
-
-    <button type="submit" class="btn dark">Save note</button>
-
-  </div>
-
+  <div class="field"><label for="page">Page number</label><input id="page" name="page" type="number" min="1" max="{{ book.page_count }}" value="{{ form.page }}"><p class="field-hint">For page notes. This book has {{ book.page_count }} pages.</p></div>
+  <div class="field"><label for="unit">Chapter, appendix, or section</label><input id="unit" name="unit" value="{{ form.unit }}"><p class="field-hint">Use a chapter number, an appendix letter, or a section such as preface or contents.</p></div>
+  <div class="field"><label for="vs_edition">Compared edition</label><input id="vs_edition" name="vs_edition" value="{{ form.vs_edition }}" placeholder="3rd ed."><p class="field-hint">Only for edition difference notes.</p></div>
+  <div class="field"><label for="anchor_desc">Which spot exactly?</label><input id="anchor_desc" name="anchor_desc" value="{{ form.anchor_desc }}" maxlength="80" required></div>
+  <div class="field"><label for="kind">Type of note</label><select id="kind" name="kind">{% for kind in kinds %}<option value="{{ kind }}" {% if form.kind == kind %}selected{% endif %}>{{ kind|capitalize }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="body">Your note</label><textarea id="body" name="body" maxlength="2000" required>{{ form.body }}</textarea></div>
+  <div class="field"><label for="visibility">Who can see it?</label><select id="visibility" name="visibility"><option value="shared" {% if form.visibility == 'shared' %}selected{% endif %}>Everyone</option><option value="private" {% if form.visibility == 'private' %}selected{% endif %}>Only me</option></select></div>
+  <p class="field-hint">Posting as {{ current_user.username }}.</p>
+  <div class="form-actions"><button class="btn btn-primary" type="submit">Save note</button><a class="btn btn-ghost" href="{{ url_for('books.book', book_id=book._id) }}">Cancel</a></div>
 </form>
-
 {% endblock %}
