@@ -19,9 +19,9 @@
     <a href="{{ url_for('books.home') }}">Annotation</a>
 
     {% if current_user.is_authenticated %}
-    <span class="me">{{ current_user.username[:18] }} · <a href="{{ url_for('auth.logout') }}">Log out</a></span>
+    <span class="me">{{ current_user.username[:18] }} | <a href="{{ url_for('auth.logout') }}">Log out</a></span>
     {% else %}
-    <a class="me" href="{{ url_for('auth.login', next=request.path) }}">Log in</a>
+    <span class="me"><a href="{{ url_for('auth.login') }}">Log in</a></span>
     {% endif %}
 
 
@@ -29,7 +29,12 @@
 
 
 
-  <main class="main">
+  <main>
+    {%if errors%}
+    {%for error in errors%}
+    <p class="errs">{{ error }}</p>
+    {%endfor%}
+    {%endif%}
     {%block content%}{%endblock%}
   </main>
 
@@ -37,10 +42,10 @@
 
 
   
-  <nav class="tabs">
-    <a class="tab {% if request.blueprint == 'books' %}on{% endif %}" href="{{ url_for('books.home') }}">Books</a>
-    <a class="tab {% if request.blueprint == 'search' %}on{% endif %}" href="{{ url_for('search.search') }}">Search</a>
-    <a class="tab {% if request.path == '/notebook' %}on{% endif %}" href="{{ url_for('notes.my_notes') }}">Notebook</a>
+  <nav>
+    <a class="{% if request.path == '/' or request.path.startswith('/books') %}on{% endif %}" href="{{ url_for('books.home') }}">Books</a>
+    <a class="{% if request.path == '/search' %}on{% endif %}" href="{{ url_for('search.search') }}">Search</a>
+    <a class="{% if request.path == '/notebook' %}on{% endif %}" href="{{ url_for('notes.my_notes') }}">Notebook</a>
   </nav>
 
 </body>

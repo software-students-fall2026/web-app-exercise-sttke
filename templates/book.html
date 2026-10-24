@@ -1,6 +1,5 @@
 {% extends "layout.html" %}
 {% from "card.html" import card %}
-{% block title %}{{ book.title }} · Annotation{%endblock%}
 
 
 
@@ -9,39 +8,28 @@
 
 {%block content%}
 
-<header class="head">
+<h1 class="big">{{ book.title }}</h1>
 
-  <h1 class="big">{{ book.title }}</h1>
+  <p>{{ book.authors }}{% if book.edition %} - {{ book.edition }}{% endif %}</p>
 
-  <p>{{ book.authors }}{% if book.edition %} · {{ book.edition }}{% endif %}</p>
+  <p>{{ book.call_number }} - {{ book.page_count }} pages - {{ book.location }} - {{ book.course }}</p>
 
-  <p>
-    <span class="pill">{{ book.call_number }}</span>
-    <span class="pill">{{ book.page_count }} pages</span>
-    <span class="pill">{{ book.location }}</span>
-    <span class="pill">{{ book.course }}</span>
-  </p>
 
-  
-</header>
 
 
 
 
 <div class="box">
 
-  <p><strong>{{ count }}</strong> notes so far, <mark>and the pages stay clean</mark></p>
 
 
-  <form class="jump" method="get" action="{{ url_for('notes.write', book_id=book._id) }}">
+
+  <form class="sbox" method="get" action="{{ url_for('notes.write', book_id=book._id) }}">
     <input name="page" type="number" min="1" max="{{ book.page_count }}" placeholder="Page" required>
     <button type="submit" class="btn dark">Write here</button>
   </form>
 
-  <p>
-    <a href="{{ url_for('notes.write', book_id=book._id) }}">Chapter / edition note</a>
-    <a href="#chapter-notes">Jump to chapter / edition ↓</a>
-  </p>
+  <p><a href="{{ url_for('notes.write', book_id=book._id) }}">Chapter / edition note</a></p>
 
 </div>
 
@@ -51,13 +39,9 @@
 <section>
   <h2 class="sec">Notes by page</h2>
 
-  {%if not by_page%}
-  <p class="none">Nobody has written on this book yet. Turn to the page you want and type its number above.</p>
-  {% endif%}
 
-  {% for pg in by_page%}
 
-  <div>
+  {%for pg in by_page%}
 
     <h3 class="pg">
       <span>p.{{ pg.page }}</span>
@@ -65,17 +49,17 @@
     </h3>
 
 
-    {% for note in pg.notes %}
-    {{ card(note, False, note.owner_id == reader_id()) }}
+    {%for note in pg.notes%}
+    {{ card(note) }}
     {% if note.answers %}
-    <div class="answers">
+    <details>
+      <summary>Replies ({{ note.answers|length }})</summary>
       {% for r in note.answers %}
-      {{ card(r, False, r.owner_id == reader_id()) }}
+      {{ card(r) }}
       {% endfor%}
-    </div>
+    </details>
     {% endif%}
-    {% endfor %}
-  </div>
+    {%endfor%}
 
   {%endfor%}
 
@@ -84,28 +68,24 @@
 
 
 
-<section id="chapter-notes">
+<section>
 
   <h2 class="sec">Chapter / edition</h2>
 
-  <p>Notes anchored to the preface, a chapter, an appendix or an edition difference. Describe the spot in the book, not the course.</p>
 
-  {%if not by_chapter%}
-  <div class="none">
-    <p>No chapter or edition notes yet.</p>
-    <a class="btn light" href="{{ url_for('notes.write', book_id=book._id) }}">Chapter / edition note</a>
-  </div>
-  {% endif %}
 
-  {% for note in by_chapter%}
-  {{ card(note, False, note.owner_id == reader_id()) }}
-  {% if note.answers %}
 
-  <div class="answers">
+
+  {%for note in by_chapter%}
+  {{ card(note) }}
+  {%if note.answers%}
+
+  <details>
+    <summary>Replies ({{ note.answers|length }})</summary>
     {% for r in note.answers %}
-    {{ card(r, False, r.owner_id == reader_id()) }}
+    {{ card(r) }}
     {% endfor %}
-  </div>
+  </details>
 
   {%endif%}
   {%endfor%}
