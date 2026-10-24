@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+
+
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Annotation{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+
+
+<body>
+
+  <header class="topbar">
+    <a href="{{ url_for('books.index') }}">Annotation</a>
+    <div class="account">
+      {% if current_user.is_authenticated %}
+        <span>{{ current_user.username }}</span>
+        <form method="post" action="{{ url_for('auth.logout') }}"><button type="submit">Log out</button></form>
+      {% else %}
+        <a href="{{ url_for('auth.login', next=request.path) }}">Log in</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <nav class="bottom-nav">
+    <a class="nav-item {% if request.blueprint == 'books' %}is-active{% endif %}" href="{{ url_for('books.index') }}">Books</a>
+    <a class="nav-item {% if request.blueprint == 'search' %}is-active{% endif %}" href="{{ url_for('search.search') }}">Search</a>
+    <a class="nav-item {% if request.path == '/notebook' %}is-active{% endif %}" href="{{ url_for('notes.notebook') }}">Notebook</a>
+  </nav>
+
+  <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+
+</body>
+
+
+
+</html>
