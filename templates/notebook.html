@@ -1,44 +1,9 @@
-{% extends "layout.html" %}
-{% from "card.html" import card %}
-
-
-
-
-{%block content%}
-
-<h1 class="title">My Notebook</h1>
-
-
-
-
-
-<section>
-  <h2 class="sec">Private drafts</h2>
-
-
-
-  {%for note in notes%}
-  {%if note.visibility == 'private'%}
-  {{ card(note) }}
-  {%endif%}
-  {%endfor%}
-</section>
-
-
-
-
-<section>
-  <h2 class="sec">Shared</h2>
-
-  {%for note in notes%}
-  {%if note.visibility=='shared'%}
-  {{ card(note) }}
-  {%endif%}
-  {%endfor%}
-
-</section>
-
-
-
-
-{%endblock%}
+{% extends "base.html" %}
+{% block title %}My notebook · Annotation{% endblock %}
+{% block content %}
+<h1 class="page-title">My notebook</h1>
+{% if not notes %}<p class="empty">No notes yet. <a href="{{ url_for('books.index') }}">Find a book</a> to get started.</p>{% endif %}
+{% for note in notes %}
+  {% with show_book=True, can_edit=True %}{% include "_note.html" %}{% endwith %}
+{% endfor %}
+{% endblock %}
