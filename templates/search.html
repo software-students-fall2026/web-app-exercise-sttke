@@ -1,5 +1,7 @@
 {%extends "layout.html"%}
-{% from "card.html" import card %}
+{% from "card.html" import card with context %}
+
+{%block title%}Search - Annotation{%endblock%}
 
 
 
@@ -55,6 +57,10 @@
   {{ card(note) }}
   {%endfor%}
 </section>
+
+{%if not books and not notes%}
+<p class="notice">Nothing matched.</p>
+{%endif%}
 
 
 {%endif%}
