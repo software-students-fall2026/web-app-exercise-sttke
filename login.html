@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Log in · Annotation{% endblock %}
+{% block content %}
+<h1 class="page-title">Log in</h1>
+{% if errors %}<ul class="form-errors">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+<form method="post">
+  <div class="field"><label for="username">Username</label><input id="username" name="username" value="{{ username }}" required></div>
+  <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" required></div>
+  <div class="form-actions"><button class="btn btn-primary" type="submit">Log in</button></div>
+</form>
+<p>New here? <a href="{{ url_for('auth.register', next=request.args.get('next', '')) }}">Create an account</a>.</p>
+{% endblock %}

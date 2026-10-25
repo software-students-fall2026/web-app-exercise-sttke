@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Create account · Annotation{% endblock %}
+{% block content %}
+<h1 class="page-title">Create an account</h1>
+{% if errors %}<ul class="form-errors">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+<form method="post">
+  <div class="field"><label for="username">Username</label><input id="username" name="username" value="{{ username }}" minlength="3" maxlength="30" required></div>
+  <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" minlength="8" required></div>
+  <div class="field"><label for="confirm_password">Confirm password</label><input id="confirm_password" name="confirm_password" type="password" minlength="8" required></div>
+  <div class="form-actions"><button class="btn btn-primary" type="submit">Register</button></div>
+</form>
+<p>Already registered? <a href="{{ url_for('auth.login', next=request.args.get('next', '')) }}">Log in</a>.</p>
+{% endblock %}
