@@ -1,6 +1,6 @@
 # Annotation
 
-Annotation is a mobile web application for textbooks on course reserve at Bobst Library. Readers can write their annotation in the webthey and it stays attached to that book, that edition and that page for the next reader.
+Annotation is a mobile web application for textbooks on course reserve at Bobst Library. Readers can write their annotation in the web and it stays attached to that book, that edition and that page for the next reader.
 
 ## Product vision statement
 
@@ -57,20 +57,11 @@ cp env.example .env
 
 | Variable | What to put there |
 |---|---|
-| `MONGO_URI` | The connection string. Atlas: `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/`. Local: `mongodb://localhost:27017` |
-| `MONGO_DBNAME` | The database name. Use `annotation` (also the default when the line is missing) |
-| `SECRET_KEY` | Any long random string. Flask uses it to sign the session cookie |
-| `SEED_PASSWORD` | The password given to the sample accounts created by the seed script |
+| `MONGO_URI` | Connection string. Atlas: `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/` |
+| `MONGO_DBNAME` | Database name |
+| `SECRET_KEY` | Any long random string |
+| `SEED_PASSWORD` | Password for sample accounts |
 
-`.env` is listed in `.gitignore` and must never be committed. Share it through the team channel only.
-
-To run MongoDB locally with Docker instead of Atlas:
-
-```bash
-docker run -d --name annotation-mongo -p 27017:27017 mongo:7
-```
-
-and set `MONGO_URI=mongodb://localhost:27017`. Without Docker, install MongoDB Community Server from mongodb.com instead; it runs as a service on port 27017 and the same `MONGO_URI` works.
 
 ### 4. Load the sample data
 
@@ -78,9 +69,9 @@ and set `MONGO_URI=mongodb://localhost:27017`. Without Docker, install MongoDB C
 python seed.py
 ```
 
-This empties the `books` and `notes` collections and inserts a set of course-reserve textbooks with notes and replies, so the app has something to show. Run it again at any time to reset the data.
+This empties the `books` and `notes` collections and inserts a set of textbooks with notes and replies so the app has something to show. Run it again at any time to reset the data.
 
-It also creates six sample accounts, `amy`, `jun`, `kai`, `marco`, `priya` and `yuki`, whose password is the `SEED_PASSWORD` value from `.env`, so you can log in and edit the sample notes. Running the script again keeps these accounts.
+It also creates six sample accounts: `amy`, `jun`, `kai`, `marco`, `priya`, `yuki` with password variable `SEED_PASSWORD`
 
 ### 5. Start the app
 
@@ -90,20 +81,8 @@ flask --app app run
 
 Open http://127.0.0.1:5000 in browser
 
-Log in with one of the sample accounts and the `SEED_PASSWORD` value.
+Log in with sample accounts and `SEED_PASSWORD` value.
 Browsing and searching does not need login; writing, replying, editing, deleting and sharing notes need one.
-
-### For teammates
-
-After cloning, run the course setup script once from the repository root:
-
-```bash
-python3 .automations/setup.py
-```
-
-On Windows run `python .automations/setup.py`.
-
-Work on a branch, open a pull request against this repository's `main`, and have another team member review and merge it.
 
 ## Task boards
 
