@@ -1,8 +1,48 @@
-{% extends "base.html" %}
-{% block title %}Delete note · Annotation{% endblock %}
-{% block content %}
-<h1 class="page-title">Delete {{ 'reply' if note.reply_to else 'note' }}?</h1>
-<article class="note"><p class="note-body">{{ note.body }}</p></article>
-{% if not note.reply_to %}<p>Deleting this note also removes its replies.</p>{% endif %}
-<form method="post"><div class="form-actions"><button class="btn btn-primary" type="submit">Delete</button><a class="btn btn-ghost" href="{{ url_for('notes.detail', note_id=note._id) }}">Cancel</a></div></form>
-{% endblock %}
+{%extends "layout.html"%}
+
+{%block title%}{%if note.reply_to%}Delete reply{%else%}Delete note{% endif %} - Annotation{%endblock%}
+
+
+
+{%block content%}
+<h1 class="title">{%if note.reply_to %}Delete reply{% else%}Delete note{%endif%}</h1>
+
+<p>Are you sure you want to delete this {%if note.reply_to%}reply{%else%}note{%endif%}?</p>
+
+
+{%if not note.reply_to%}
+<p>Deleting this note also removes its replies.</p>
+{%endif%}
+
+
+<div class="item">
+
+  <p class="text">{{ note.body }}</p>
+
+  <p class="meta">{{ note.owner_name }}</p>
+
+</div>
+
+<form method="post" action="{{ url_for('notes.remove', note_id=note._id) }}">
+
+  <div class="btns">
+
+    <button type="submit" class="btn dark">
+
+      Delete {% if note.reply_to %}reply{% else %}note{% endif %}
+
+    </button>
+
+    <a class="btn light" href="{{ url_for('books.show', book_id=note.book_id) }}">
+
+      Cancel
+      
+    </a>
+
+  </div>
+
+</form>
+
+{%endblock%}
+
+

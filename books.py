@@ -1,63 +1,106 @@
-from collections import defaultdict
+from flask import render_template
+from flask import Blueprint
 
-from flask import Blueprint, abort, current_app, render_template, request
+from flask_login import current_user
 
-from helpers import KINDS, get_or_404, position_key, visible_filter
-
-
-books_bp = Blueprint("books", __name__)
+from helpers import WHERE, db, find_or_404
 
 
-@books_bp.get("/")
-def index():
-    books = list(current_app.db.books.find().sort([("course", 1), ("title", 1)]))
-    counts = defaultdict(int)
-    for note in current_app.db.notes.find({
-        "reply_to": None,
-        **visible_filter(),
-    }, {"book_id": 1}):
-        counts[note["book_id"]] += 1
-
-    groups = []
-    for book in books:
-        book["note_count"] = counts[book["_id"]]
-        course = book.get("course") or "Other"
-        if not groups or groups[-1]["course"] != course:
-            groups.append({"course": course, "books": []})
-        groups[-1]["books"].append(book)
-    return render_template("index.html", groups=groups)
+bp=Blueprint("books",__name__)
 
 
-@books_bp.get("/books/<book_id>")
-def book(book_id):
-    book_record = get_or_404(current_app.db.books, book_id)
-    selected_kind = request.args.get("kind", "").strip()
-    if selected_kind and selected_kind not in KINDS:
-        abort(400)
 
-    all_notes = list(current_app.db.notes.find({
-        "book_id": book_record["_id"],
-        **visible_filter(),
-    }))
-    roots = [note for note in all_notes if not note.get("reply_to")]
-    replies = defaultdict(list)
+def sort_key(note):
+
+    unit=note["unit"] or ""
+    number=0
+
+    if unit.isdigit():
+        number=int(unit)
+
+    return (WHERE.index(note["scope"]), note["page"] or 0,number, unit)
+
+
+
+
+
+@bp.route("/")
+def home():
+
+    query={"reply_to": None}
+
+    if current_user.is_authenticated:
+        query["$or"]=[{"visibility": "shared"}, {"owner_id": current_user.get_id()}]
+    else:
+        query["visibility"]="shared"
+
+
+    counts={}
+    for note in db.notes.find(query):
+        counts[note["book_id"]]=counts.get(note["book_id"], 0)+1
+
+
+    courses=[]
+    for book in db.books.find().sort([("course",1), ("title",1)]):
+
+        book["count"]=counts.get(book["_id"],0)
+
+        if not courses or courses[-1]["course"]!=book["course"]:
+            courses.append({"course": book["course"], "books": []})
+
+
+        courses[-1]["books"].append(book)
+
+    return render_template("index.html", courses=courses)
+
+
+
+
+
+
+
+@bp.route("/books/<book_id>")
+def show(book_id):
+
+    book=find_or_404(db.books,book_id)
+
+    query={"book_id":book["_id"]}
+
+    if current_user.is_authenticated:
+        query["$or"] = [{"visibility": "shared"},{"owner_id": current_user.get_id()}]
+    else:
+        query["visibility"] ="shared"
+
+
+    all_notes=list(db.notes.find(query).sort("created_at", 1))
+
+    shown=[]
     for note in all_notes:
-        if note.get("reply_to"):
-            replies[note["reply_to"]].append(note)
-    for thread in replies.values():
-        thread.sort(key=lambda note: (note["created_at"], str(note["_id"])))
+        if note["reply_to"]:
+            continue
+        note["answers"] = []
+        for reply in all_notes:
+            if reply["reply_to"] == note["_id"]:
+                note["answers"].append(reply)
+        shown.append(note)
+    shown.sort(key=sort_key)
 
-    shown = [note for note in roots if not selected_kind or note.get("kind") == selected_kind]
+
+
+
+    by_page=[]
+    by_chapter=[]
     for note in shown:
-        note["replies"] = replies[note["_id"]] if note.get("visibility") == "shared" else []
-    shown.sort(key=position_key)
+        if note["scope"]=="page":
 
-    return render_template(
-        "book.html",
-        book=book_record,
-        total=len(roots),
-        page_notes=[note for note in shown if note.get("scope") == "page"],
-        chapter_notes=[note for note in shown if note.get("scope") != "page"],
-        kinds=KINDS,
-        selected_kind=selected_kind,
-    )
+            if not by_page or by_page[-1]["page"]!=note["page"]:
+                by_page.append({"page": note["page"],"notes": []})
+
+            by_page[-1]["notes"].append(note)
+
+        else:
+            by_chapter.append(note)
+
+
+
+    return render_template("book.html",book=book,by_page=by_page,by_chapter=by_chapter)

@@ -1,5 +1,5 @@
 {%macro card(note)%}
-{%set mine=note.owner_id==session.rid%}
+{%set mine=current_user.is_authenticated and note.owner_id==current_user.get_id()%}
 
 <article class="item" id="n-{{ note._id }}">
 
@@ -77,7 +77,7 @@
     <a href="{{ url_for('notes.change', note_id=note._id) }}">Edit</a>
     <a class="red" href="{{ url_for('notes.remove', note_id=note._id) }}">Delete</a>
     {% if note.visibility == 'private' %}
-    <form method="post" action="{{ url_for('notes.publish', note_id=note._id) }}" onsubmit="return confirm('Share this note with everyone? It cannot be made private again.')"><button type="submit">Share</button></form>
+    <form method="post" action="{{ url_for('notes.publish', note_id=note._id) }}"><button type="submit">Share</button></form>
     {%endif%}
     {%endif%}
 </div>

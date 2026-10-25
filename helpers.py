@@ -1,7 +1,9 @@
 import os
 
 from bson import ObjectId
+
 from dotenv import load_dotenv
+
 from pymongo import MongoClient
 
 from flask import abort
@@ -10,7 +12,11 @@ from flask import abort
 
 
 load_dotenv()
-db = MongoClient(os.environ["MONGO_URI"])[os.environ["MONGO_DBNAME"]]
+
+if not os.environ.get("MONGO_URI"):
+    raise RuntimeError("Set MONGO_URI in .env before starting the app")
+
+db=MongoClient(os.environ["MONGO_URI"])[os.environ.get("MONGO_DBNAME", "annotation")]
 
 
 
@@ -39,9 +45,7 @@ def check_anchor(scope, page, unit, other_ed, book):
 
     if scope=="page":
 
-        if page is None:
-            errs.append("Page must be a whole number from 1 to " + str(book["page_count"]))
-        elif page<1 or page>book["page_count"]:
+        if page is None or page<1 or page>book["page_count"]:
             errs.append("Page must be a whole number from 1 to " + str(book["page_count"]))
 
         if unit:
@@ -49,27 +53,23 @@ def check_anchor(scope, page, unit, other_ed, book):
 
 
     elif scope=="chapter":
-        if unit not in NUMS:
-            errs.append("Chapter must be from 1 to " + str(book["chapter_count"]))
-        elif int(unit) > book["chapter_count"]:
+        if unit not in NUMS or int(unit) > book["chapter_count"]:
             errs.append("Chapter must be from 1 to " + str(book["chapter_count"]))
 
 
     elif scope=="appendix":
         if not book["appendices"]:
             errs.append("This book has no appendices")
-        elif unit not in LETTERS:
-            errs.append("This book only has appendices " + book["appendices"])
-        elif unit not in book["appendices"]:
+        elif unit not in LETTERS or unit not in book["appendices"]:
             errs.append("This book only has appendices " + book["appendices"])
 
     elif scope=="front_matter":
         if unit not in ["preface","contents","notation","inside_cover"]:
-            errs.append("A front matter note need one of preface, contents, notation or inside_cover")
+            errs.append("A front matter note needs one of preface, contents, notation or inside_cover")
 
     elif scope=="edition":
         if unit not in ["exercise_numbering","page_numbering","notation","figures","appendix_content"]:
-            errs.append("An edition note need one of exercise_numbering, page_numbering, notation, figures or appendix_content")
+            errs.append("An edition note needs one of exercise_numbering, page_numbering, notation, figures or appendix_content")
 
         if not book["edition"]:
             errs.append("This book has no edition, so it cannot take edition notes")

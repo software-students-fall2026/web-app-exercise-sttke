@@ -4,6 +4,7 @@ import os
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from werkzeug.security import generate_password_hash
 
 
 
@@ -11,14 +12,7 @@ DESK_2H = "Bobst Course Reserves desk, 2-hour loan"
 DESK_1D = "Bobst Course Reserves desk, 1-day loan"
 DESK_3D = "Bobst Course Reserves desk, 3-day loan"
 
-OWNERS = {
-    "Amy": "seed-amy",
-    "Jun": "seed-jun",
-    "Kai": "seed-kai",
-    "Marco": "seed-marco",
-    "Priya": "seed-priya",
-    "Yuki": "seed-yuki",
-}
+USERS = ["amy", "jun", "kai", "marco", "priya", "yuki"]
 
 
 
@@ -43,13 +37,18 @@ BOOKS = [
 
 
 
-NOTE_TEMPLATES = [
-    ("page", 49, None, None, "question", "the definition near the top of the page", "Could we add a small example to make this definition easier to apply?"),
-    ("page", 52, None, None, "translation", "the paragraph introducing the main idea", "In simpler words, this paragraph is explaining how the pieces fit together."),
-    ("page", 86, None, None, "correction", "the worked example in the middle of the page", "The next step seems to skip an intermediate calculation. It may help to write it out."),
-    ("chapter", None, "1", None, "summary", "Chapter 1 as a whole", "This chapter introduces the key terms and the basic method. Review the definitions before moving on."),
-    ("front_matter", None, "notation", None, "translation", "the notation table", "Check the notation carefully: similar symbols are used for different concepts in different books."),
+PAGE_NOTES = [
+    {"page": 49, "kind": "question", "anchor_desc": "the definition near the top of the page", "body": "Could we add a small example to make this definition easier to apply?"},
+    {"page": 52, "kind": "translation", "anchor_desc": "the paragraph introducing the main idea", "body": "In simpler words, this paragraph is explaining how the pieces fit together."},
+    {"page": 86, "kind": "correction", "anchor_desc": "the worked example in the middle of the page", "body": "The next step seems to skip an intermediate calculation. It may help to write it out."},
 ]
+
+EXTRA_NOTES = [
+    {"scope": "chapter", "unit": "1", "kind": "summary", "anchor_desc": "Chapter 1 as a whole", "body": "This chapter introduces the key terms and the basic method. Review the definitions before moving on."},
+    {"scope": "front_matter", "unit": "notation", "kind": "translation", "anchor_desc": "the notation table", "body": "Check the notation carefully: similar symbols are used for different concepts in different books."},
+]
+
+EXTRA_OWNERS = ["yuki", "jun", "jun", "marco", "marco"]
 
 
 
@@ -57,46 +56,40 @@ NOTE_TEMPLATES = [
 
 NOTES = []
 for book_index, book in enumerate(BOOKS):
-    for template_index, template in enumerate(NOTE_TEMPLATES[:3]):
-        scope, page, unit, vs_edition, kind, anchor_desc, body = template
-        
-        if scope == "page":
-            page =min(page + book_index * 3, book["page_count"])
-        
+    for note_index, note in enumerate(PAGE_NOTES):
         NOTES.append({
             "book": book_index,
-            "scope": scope,
-            "page": page,
-            "unit": unit,
-            "vs_edition": vs_edition,
-            "kind": kind,
-            "owner": list(OWNERS.keys())[(book_index + template_index) % len(OWNERS)],
-            "anchor_desc": anchor_desc,
-            "body": f"{body} (Sample note for {book['title']})",
+            "scope": "page",
+            "page": note["page"] + book_index * 3,
+            "unit": None,
+            "vs_edition": None,
+            "kind": note["kind"],
+            "owner": USERS[(book_index + note_index) % len(USERS)],
+            "anchor_desc": note["anchor_desc"],
+            "body": note["body"] + " (Sample note for " + book["title"] + ")",
         })
 
 
 for book_index in range(5):
-    template_index = 3 + (book_index % 2)
-    scope, page, unit, vs_edition, kind, anchor_desc, body = NOTE_TEMPLATES[template_index]
+    note = EXTRA_NOTES[book_index % 2]
     NOTES.append({
         "book": book_index,
-        "scope": scope,
-        "page": page,
-        "unit": unit,
-        "vs_edition": vs_edition,
-        "kind": kind,
-        "owner": list(OWNERS.keys())[(book_index + template_index + 2) % len(OWNERS)],
-        "anchor_desc": anchor_desc,
-        "body": f"{body} (Additional sample note for {BOOKS[book_index]['title']})",
+        "scope": note["scope"],
+        "page": None,
+        "unit": note["unit"],
+        "vs_edition": None,
+        "kind": note["kind"],
+        "owner": EXTRA_OWNERS[book_index],
+        "anchor_desc": note["anchor_desc"],
+        "body": note["body"] + " (Additional sample note for " + BOOKS[book_index]["title"] + ")",
     })
 
 REPLIES = [
-    {"note": 0, "owner": "Jun", "body": "An example would help. I will add one to my study notes."},
-    {"note": 1, "owner": "Amy", "body": "Agreed. Rephrasing it this way made the idea clearer to me."},
-    {"note": 5, "owner": "Kai", "body": "I had the same question and found the next section helpful."},
-    {"note": 12, "owner": "Priya", "body": "Good point. It is worth comparing this with the definition earlier in the chapter."},
-    {"note": 22, "owner": "Marco", "body": "I think this is a useful summary to review before the exam."},
+    {"note": 0, "owner": "jun", "body": "An example would help. I will add one to my study notes."},
+    {"note": 1, "owner": "amy", "body": "Agreed. Rephrasing it this way made the idea clearer to me."},
+    {"note": 5, "owner": "kai", "body": "I had the same question and found the next section helpful."},
+    {"note": 12, "owner": "priya", "body": "Good point. It is worth comparing this with the definition earlier in the chapter."},
+    {"note": 22, "owner": "marco", "body": "I think this is a useful summary to review before the exam."},
 ]
 
 
@@ -106,14 +99,33 @@ REPLIES = [
 
 
 
-def seed_books(db, start):
-    book_ids = []
-    for index, book in enumerate(BOOKS):
-        doc = dict(book)
-        doc["created_at"] = start
-        doc["seed_key"] = f"annotation-demo-book-{index}"
+def seed_users(db, password):
+    owner_ids = {}
+    db.users.create_index("username_key", unique=True)
 
-        result = db.books.insert_one(doc)
+    for name in USERS:
+        found = db.users.find_one({"username_key": name})
+
+        if found:
+            db.users.update_one({"_id": found["_id"]}, {"$set": {"password_hash": generate_password_hash(password)}})
+            owner_ids[name] = str(found["_id"])
+        else:
+            result = db.users.insert_one({
+                "username": name,
+                "username_key": name,
+                "password_hash": generate_password_hash(password),
+            })
+            owner_ids[name] = str(result.inserted_id)
+
+    return owner_ids
+
+
+
+
+def seed_books(db):
+    book_ids = []
+    for book in BOOKS:
+        result = db.books.insert_one(dict(book))
         book_ids.append(result.inserted_id)
 
     return book_ids
@@ -122,12 +134,11 @@ def seed_books(db, start):
 
 
 
-def seed_notes(db, start, book_ids):
+def seed_notes(db, start, book_ids, owner_ids):
     note_ids = []
     for index, note in enumerate(NOTES):
         stamp = start + datetime.timedelta(minutes=index + 1)
         doc = {
-            "seed_key": f"annotation-demo-note-{index}",
             "book_id": book_ids[note["book"]],
             "scope": note["scope"],
             "page": note["page"],
@@ -136,7 +147,7 @@ def seed_notes(db, start, book_ids):
             "anchor_desc": note["anchor_desc"],
             "kind": note["kind"],
             "body": note["body"],
-            "owner_id": OWNERS[note["owner"]],
+            "owner_id": owner_ids[note["owner"]],
             "owner_name": note["owner"],
             "visibility": "shared",
             "reply_to": None,
@@ -150,22 +161,21 @@ def seed_notes(db, start, book_ids):
 
 
 
-def seed_replies(db, start, note_ids):
+def seed_replies(db, start, note_ids, owner_ids):
 
     for index, reply in enumerate(REPLIES):
         parent = db.notes.find_one({"_id": note_ids[reply["note"]]})
         stamp = start +datetime.timedelta(minutes=len(NOTES) + index + 1)
         db.notes.insert_one({
-            "seed_key": f"annotation-demo-reply-{index}",
             "book_id": parent["book_id"],
             "scope": None,
             "page":None,
             "unit":None,
             "vs_edition": None,
             "anchor_desc": None,
-            "kind": "reply",
+            "kind": None,
             "body": reply["body"],
-            "owner_id": OWNERS[reply["owner"]],
+            "owner_id": owner_ids[reply["owner"]],
             "owner_name": reply["owner"],
             "visibility": "shared",
             "reply_to": parent["_id"],
@@ -190,10 +200,11 @@ def seed_replies(db, start, note_ids):
 def main():
     load_dotenv()
     mongo_uri =os.getenv("MONGO_URI")
-    db_name =os.getenv("MONGO_DBNAME")
+    db_name =os.getenv("MONGO_DBNAME", "annotation")
+    password = os.getenv("SEED_PASSWORD")
     
-    if not mongo_uri or not db_name:
-        raise RuntimeError("Please set MONGO_URI and MONGO_DBNAME in your .env file.")
+    if not mongo_uri or not password:
+        raise RuntimeError("Please set MONGO_URI and SEED_PASSWORD in your .env file.")
 
     client = MongoClient(mongo_uri, serverSelectionTimeoutMS=10000)
     
@@ -204,15 +215,17 @@ def main():
         db.notes.delete_many({})
 
         start = datetime.datetime(2026, 10, 12, 9, 0, tzinfo=datetime.timezone.utc)
-        book_ids = seed_books(db, start)
-        note_ids = seed_notes(db, start, book_ids)
-        seed_replies(db, start, note_ids)
+        owner_ids = seed_users(db, password)
+        book_ids = seed_books(db)
+        note_ids = seed_notes(db, start, book_ids, owner_ids)
+        seed_replies(db, start, note_ids, owner_ids)
 
         print("Seed completed successfully.")
+        print("Users:", ", ".join(USERS), "(password = SEED_PASSWORD)")
         print("Books:", db.books.count_documents({}))
         print("Notes and replies:", db.notes.count_documents({}))
         print("Top-level notes:", db.notes.count_documents({"reply_to": None}))
-        print("Replies:", db.notes.count_documents({"kind": "reply"}))
+        print("Replies:", db.notes.count_documents({"reply_to": {"$ne": None}}))
     
     finally:
         client.close()

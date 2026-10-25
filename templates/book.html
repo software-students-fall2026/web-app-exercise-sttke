@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
-{% from "card.html" import card %}
+{% from "card.html" import card with context %}
+{% block title %}{{ book.title }} - Annotation{% endblock %}
 
 
 
@@ -39,6 +40,10 @@
 <section>
   <h2 class="sec">Notes by page</h2>
 
+  {% if not by_page %}
+  <p class="notice">No page notes yet. Turn to the page you want and type its number above.</p>
+  {% endif %}
+
 
 
   {%for pg in by_page%}
@@ -71,6 +76,10 @@
 <section>
 
   <h2 class="sec">Chapter / edition</h2>
+
+  {% if not by_chapter %}
+  <p class="notice">No chapter or edition notes yet.</p>
+  {% endif %}
 
 
 

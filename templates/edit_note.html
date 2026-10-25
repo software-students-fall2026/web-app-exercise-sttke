@@ -1,13 +1,72 @@
-{% extends "base.html" %}
-{% block title %}Edit note · Annotation{% endblock %}
-{% block content %}
-<h1 class="page-title">Edit {{ 'reply' if note.reply_to else 'note' }}</h1>
-{% if errors %}<ul class="form-errors">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-<form method="post">
-  <div class="field"><label for="body">Text</label><textarea id="body" name="body" maxlength="2000" required>{{ body }}</textarea></div>
-  {% if not note.reply_to %}
-  <div class="field"><label for="visibility">Who can see it?</label><select id="visibility" name="visibility"><option value="shared" {% if visibility == 'shared' %}selected{% endif %}>Everyone</option><option value="private" {% if visibility == 'private' %}selected{% endif %} {% if note.visibility == 'shared' %}disabled{% endif %}>Only me</option></select></div>
-  {% endif %}
-  <div class="form-actions"><button class="btn btn-primary" type="submit">Save changes</button><a class="btn btn-ghost" href="{{ url_for('notes.detail', note_id=note._id) }}">Cancel</a></div>
+{%extends "layout.html"%}
+{%block title%}{%if note.reply_to%}Edit reply{%else %}Edit note{%endif%} - Annotation{%endblock%}
+
+
+
+
+{%block content%}
+<h1 class="title">{%if note.reply_to%}Edit reply{%else%}Edit note{%endif%}</h1>
+
+
+<form method="post" action="{{ url_for('notes.change', note_id=note._id) }}">
+
+  <div class="row">
+
+    <label for="body">{%if note.reply_to%}Your reply{%else%}Your note{%endif%}</label>
+
+    <textarea id="body" name="body" required>{{ form.body }}</textarea>
+
+  </div>
+
+
+
+
+  {%if note.reply_to%}
+  <input type="hidden" name="visibility" value="shared">
+  {%else%}
+
+
+  <div class="row">
+
+    <label for="visibility">Visibility</label>
+
+
+    <select id="visibility" name="visibility">
+
+      <option value="shared" {%if form.visibility=='shared'%}selected{%endif%}>Public</option>
+
+
+      {%if note.visibility=='private'%}
+      <option value="private" {%if form.visibility=='private'%}selected{%endif%}>Private</option>
+      {%endif%}
+
+
+    </select>
+
+
+
+    <p>Private notes are only visible to you.</p>
+
+
+    {%if note.visibility=='shared'%}
+    <p>This note is public and cannot be made private again.</p>
+    {%endif%}
+
+  </div>
+  {%endif%}
+
+
+
+  <div class="btns">
+
+    <button type="submit" class="btn dark">Save changes</button>
+
+    <a class="btn light" href="{{ url_for('books.show', book_id=note.book_id) }}#n-{{ note._id }}">Cancel</a>
+
+  </div>
+
 </form>
-{% endblock %}
+
+
+
+{%endblock%}

@@ -1,47 +1,41 @@
 from datetime import datetime, timezone
 
 
-from flask import Blueprint, abort, redirect, render_template, request, url_for
+from flask import Blueprint
+
+from flask import abort, redirect, render_template, request, url_for
+
 from flask_login import current_user, login_required
 from helpers import TYPES, check_anchor, find_or_404, db
 
-bp = Blueprint("notes", __name__)
+
+
+
+bp=Blueprint("notes",__name__)
 
 
 def read_form():
 
-    form = {}
+    form={}
 
-    for name in ["scope", "page", "unit", "vs_edition", "anchor_desc", "kind", "body"]:
+    for name in ["scope","page","unit","vs_edition","anchor_desc","kind","body"]:
+        form[name]=request.form.get(name,"").strip()
 
-        form[name] = request.form.get(name, "").strip()
 
-    form["owner_name"] = current_user.username
+    if form["scope"] =="appendix":
+        form["unit"]=form["unit"].upper()
+    else:
+        form["unit"]=form["unit"].lower()
 
-    form["visibility"] = request.form.get("visibility", "shared").strip()
+
+    form["visibility"]=request.form.get("visibility","shared").strip()
 
     return form
 
 
 
-def form_errors(form, book_doc):
-    page = None
-    if form["scope"] == "page":
-        try:
-            page = int(form["page"])
-        except ValueError:
-            page = None
-
-    unit = form["unit"] or None
-    vs_edition = form["vs_edition"] or None
-
-    errors = check_anchor(
-        form["scope"],
-        page,
-        unit,
-        vs_edition or "",
-        book_doc
-    )
+def form_errors(form, page, book_doc):
+    errors = check_anchor(form["scope"], page, form["unit"], form["vs_edition"], book_doc)
 
     if not form["anchor_desc"]:
         errors.append("Describe the spot in the book")
@@ -58,7 +52,7 @@ def form_errors(form, book_doc):
     if form["visibility"] not in ("shared", "private"):
         errors.append("Choose a valid visibility option")
 
-    return errors, page, unit, vs_edition
+    return errors
 
 
 
@@ -78,7 +72,6 @@ def write(book_id):
         "anchor_desc": "",
         "kind": "question",
         "body": "",
-        "owner_name": current_user.username,
         "visibility": "shared"
 
     }
@@ -88,7 +81,15 @@ def write(book_id):
     if request.method == "POST":
 
         form = read_form()
-        errors, page, unit, vs_edition = form_errors(form, book_doc)
+
+        page = None
+        if form["scope"] == "page":
+            try:
+                page = int(form["page"])
+            except ValueError:
+                page = None
+
+        errors = form_errors(form, page, book_doc)
 
         if not errors:
 
@@ -140,12 +141,9 @@ def answer(note_id):
 
     body = ""
 
-    owner_name = current_user.username
-
     if request.method == "POST":
 
         body = request.form.get("body", "").strip()
-        owner_name = current_user.username
 
         if not body:
 
@@ -160,7 +158,7 @@ def answer(note_id):
                 "reply_to": note["_id"],
                 "body": body,
                 "owner_id": current_user.get_id(),
-                "owner_name": owner_name,
+                "owner_name": current_user.username,
                 "visibility": "shared",
                 "created_at": now,
                 "updated_at": now
@@ -170,7 +168,7 @@ def answer(note_id):
 
             return redirect(url_for("books.show", book_id=note["book_id"]) + "#n-" + str(note["_id"]))
 
-    return render_template("reply.html", note=note, body=body, owner_name=owner_name, errors=errors)
+    return render_template("reply.html", note=note, body=body, errors=errors)
 
 
 
@@ -212,18 +210,20 @@ def change(note_id):
 
             errors.append("Choose a valid visibility option")
 
-        if note.get("reply_to") and form["visibility"] != "shared":
+        if note["reply_to"] and form["visibility"] != "shared":
             errors.append("Replies must stay public")
 
-        if note.get("visibility") == "shared" and form["visibility"] == "private":
+        if note["visibility"] == "shared" and form["visibility"] == "private":
             errors.append("A public note cannot be made private again")
         if not errors:
 
             changes = {
                 "body": form["body"],
-                "visibility": form["visibility"],
-                "updated_at": datetime.now(timezone.utc)
+                "visibility": form["visibility"]
             }
+
+            if form["body"] != note["body"]:
+                changes["updated_at"] = datetime.now(timezone.utc)
 
             db.notes.update_one({"_id": note["_id"]}, {"$set": changes})
 
@@ -258,27 +258,14 @@ def remove(note_id):
 
     if request.method == "POST":
 
-        db.notes.delete_one({
-            "_id": note["_id"],
-            "owner_id": current_user.get_id()
-        })
+        db.notes.delete_one({"_id": note["_id"]})
 
-        if not note.get("reply_to"):
-            db.notes.delete_many({"reply_to": note["_id"]})
+        if note["reply_to"]:
+            return redirect(url_for("books.show", book_id=note["book_id"]) + "#n-" + str(note["reply_to"]))
 
-        if note.get("reply_to"):
-            return redirect(
-                url_for(
-                    "books.show",
-                    book_id=note["book_id"],
-                    _anchor="n-" + str(note["reply_to"])
-                )
-            )
-        return redirect(
+        db.notes.delete_many({"reply_to": note["_id"]})
 
-            url_for("books.show", book_id=note["book_id"])
-
-        )
+        return redirect(url_for("books.show", book_id=note["book_id"]))
 
     return render_template(
         "delete_note.html",
@@ -290,9 +277,10 @@ def remove(note_id):
 @login_required
 
 def my_notes():
-    notes = list(db.notes.find({"owner_id": current_user.get_id(), "reply_to": None}).sort("created_at", -1))
-    names = {book["_id"]: book["title"] for book in db.books.find(
-        {"_id": {"$in": [note["book_id"] for note in notes]}})}
+    notes = list(db.notes.find({"owner_id": current_user.get_id()}).sort("created_at", -1))
+    names = {}
+    for book in db.books.find({"_id": {"$in": [note["book_id"] for note in notes]}}):
+        names[book["_id"]] = book["title"]
     for note in notes:
         note["book_name"] = names.get(note["book_id"], "Unknown book")
     return render_template("notebook.html", notes=notes)
@@ -303,13 +291,10 @@ def my_notes():
 
 def publish(note_id):
     note = find_or_404(db.notes, note_id)
-    if note.get("owner_id") != current_user.get_id():
+    if note["owner_id"] != current_user.get_id() or note["reply_to"]:
         abort(403)
-    if note.get("reply_to"):
-        abort(400)
-    if note.get("visibility") == "private":
-        db.notes.update_one(
-            {"_id": note["_id"], "owner_id": current_user.get_id(), "visibility": "private"},
-            {"$set": {"visibility": "shared", "updated_at": datetime.now(timezone.utc)}}
-        )
-    return redirect(url_for("notes.my_notes", _anchor="n-" + str(note["_id"])))
+    db.notes.update_one({"_id": note["_id"]}, {"$set": {"visibility": "shared"}})
+    back = request.referrer
+    if not back:
+        back = url_for("notes.my_notes")
+    return redirect(back + "#n-" + str(note["_id"]))

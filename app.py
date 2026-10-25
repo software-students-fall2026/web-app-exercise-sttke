@@ -2,60 +2,61 @@ import os
 
 from bson import ObjectId
 from dotenv import load_dotenv
-from flask import Flask, current_app, render_template
+from flask import Flask
+from flask import render_template
 from flask_login import LoginManager
-from pymongo import MongoClient
 
-from auth import User, auth_bp
-from books import books_bp
-from helpers import SCOPE_LABELS, UNIT_LABELS, current_owner_id
-from notes import notes_bp
-from search import search_bp
+import auth
+import books
+import notes
+import search
+from helpers import db
 
 
-login_manager = LoginManager()
-login_manager.login_view = "auth.login"
+load_dotenv()
+
+if not os.environ.get("SECRET_KEY"):
+    raise RuntimeError("Set SECRET_KEY in .env before starting the app")
+
+app=Flask(__name__)
+
+app.secret_key=os.environ["SECRET_KEY"]
+
+
+login_manager=LoginManager()
+login_manager.login_view="auth.login"
+login_manager.login_message=None
+login_manager.init_app(app)
 
 
 @login_manager.user_loader
 def load_user(user_id):
+
     if not ObjectId.is_valid(user_id):
         return None
-    record = current_app.db.users.find_one({"_id": ObjectId(user_id)})
-    return User(record) if record else None
+    
+    record=db.users.find_one({"_id":ObjectId(user_id)})
+
+    if record is None:
+        return None
+    
+    return auth.User(record)
 
 
-def create_app(test_config=None):
-    load_dotenv()
-    app = Flask(__name__)
-    app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY"),
-        MONGO_URI=os.environ.get("MONGO_URI"),
-        MONGO_DBNAME=os.environ.get("MONGO_DBNAME", "annotation"),
-    )
-    if test_config:
-        app.config.update(test_config)
+app.register_blueprint(auth.bp)
 
-    if not app.config["SECRET_KEY"] or not app.config["MONGO_URI"]:
-        raise RuntimeError("Set SECRET_KEY and MONGO_URI in .env before starting the app")
+app.register_blueprint(books.bp)
 
-    app.db = MongoClient(app.config["MONGO_URI"])[app.config["MONGO_DBNAME"]]
-    login_manager.init_app(app)
+app.register_blueprint(search.bp)
 
-    for blueprint in (auth_bp, books_bp, search_bp, notes_bp):
-        app.register_blueprint(blueprint)
+app.register_blueprint(notes.bp)
 
-    @app.context_processor
-    def template_globals():
-        return {
-            "current_owner_id": current_owner_id,
-            "SCOPE_LABELS": SCOPE_LABELS,
-            "UNIT_LABELS": UNIT_LABELS,
-        }
 
-    @app.errorhandler(403)
-    @app.errorhandler(404)
-    def error_page(error):
-        return render_template("errors.html", code=error.code), error.code
+@app.errorhandler(403)
+def err_403(err):
+    return render_template("oops.html",code=403),403
 
-    return app
+
+@app.errorhandler(404)
+def err_404(err):
+    return render_template("oops.html",code=404),404

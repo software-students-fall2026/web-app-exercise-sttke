@@ -1,12 +1,49 @@
-{% extends "base.html" %}
-{% block title %}Reply · Annotation{% endblock %}
+
+{% extends "layout.html" %}
+
+{% block title %}Reply - Annotation{% endblock %}
+
 {% block content %}
-<h1 class="page-title">Reply to {{ note.owner_name }}</h1>
-<article class="note"><p class="note-body">{{ note.body }}</p></article>
-{% if errors %}<ul class="form-errors">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-<form method="post">
-  <div class="field"><label for="body">Your reply</label><textarea id="body" name="body" maxlength="2000" required>{{ body }}</textarea></div>
-  <p class="field-hint">Posting as {{ current_user.username }}.</p>
-  <div class="form-actions"><button class="btn btn-primary" type="submit">Post reply</button><a class="btn btn-ghost" href="{{ url_for('notes.detail', note_id=note._id) }}">Cancel</a></div>
+
+<h1 class="title">Reply to note</h1>
+
+
+<div class="item">
+
+  <p class="text">{{ note.body }}</p>
+
+  <p class="meta">{{ note.owner_name }}</p>
+
+</div>
+
+
+<form method="post" action="{{ url_for('notes.answer', note_id=note._id) }}">
+
+  <div class="row">
+
+    <label for="body">Your reply</label>
+
+    <textarea id="body" name="body" required>{{ body }}</textarea>
+
+  </div>
+
+
+<div class="row">
+
+  <label>Your name</label>
+  <p>{{ current_user.username }}</p>
+
+</div>
+
+
+  <div class="btns">
+
+    <button type="submit" class="btn dark">Post reply</button>
+
+    <a class="btn light" href="{{ url_for('books.show', book_id=note.book_id) }}#n-{{ note._id }}">Cancel</a>
+
+  </div>
+
 </form>
+
 {% endblock %}
